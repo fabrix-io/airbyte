@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the user"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the user"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Email address of the user"
+    },
+    "type": {
+      "type": "string",
+      "description": "Type of user account"
+    },
+    "state": {
+      "type": "string",
+      "description": "Current state of the user"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "User creation timestamp"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last update timestamp"
+    },
+    "last_auth_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Last authentication timestamp"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "group_id": {
+      "type": "string",
+      "description": "Unique identifier for the group"
+    },
+    "group_name": {
+      "type": "string",
+      "description": "Name of the group"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "Unique identifier for the user"
+    },
+    "user_email": {
+      "type": "string",
+      "format": "email",
+      "description": "Email address of the user"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Name of the user"
+    },
+    "role": {
+      "type": "string",
+      "description": "Role of the user in the group"
+    }
+  }
+}

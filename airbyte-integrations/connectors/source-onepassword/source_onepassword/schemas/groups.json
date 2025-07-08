@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the group"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the group"
+    },
+    "description": {
+      "type": ["string", "null"],
+      "description": "Description of the group"
+    },
+    "state": {
+      "type": "string",
+      "description": "Current state of the group"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Group creation timestamp"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last update timestamp"
+    }
+  }
+}

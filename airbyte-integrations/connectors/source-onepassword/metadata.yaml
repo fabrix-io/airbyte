@@ -1,0 +1,28 @@
+data:
+  connectorSubtype: api
+  connectorType: source
+  definitionId: 5c32f3e4-3f8a-4b8c-a1b2-9e8f7d6c5a4b
+  dockerImageTag: 0.1.0
+  dockerRepository: airbyte/source-onepassword
+  githubIssueLabel: source-onepassword
+  icon: icon.svg
+  license: MIT
+  name: 1Password
+  registryOverrides:
+    cloud:
+      enabled: false
+    oss:
+      enabled: true
+  releaseStage: alpha
+  documentationUrl: https://docs.airbyte.com/integrations/sources/onepassword
+  tags:
+    - language:python
+    - cdk:python
+  connectorTestSuitesOptions:
+    - suite: liveTests
+      testConnections:
+        - name: onepassword_config_dev
+          id: abc123
+    - suite: unitTests
+    - suite: integrationTests
+metadataSpecVersion: "1.0"

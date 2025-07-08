@@ -1,0 +1,18 @@
+{
+  "documentationUrl": "https://docs.airbyte.com/integrations/sources/onepassword",
+  "connectionSpecification": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "1Password Source Spec",
+    "type": "object",
+    "required": ["access_token"],
+    "properties": {
+      "access_token": {
+        "type": "string",
+        "title": "Access Token",
+        "description": "Access token for 1Password CLI authentication. This token is used to authenticate with the 1Password CLI to retrieve account data.",
+        "airbyte_secret": true,
+        "order": 0
+      }
+    }
+  }
+}

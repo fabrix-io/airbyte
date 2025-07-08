@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the account"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the 1Password account"
+    },
+    "domain": {
+      "type": "string",
+      "description": "Domain of the 1Password account"
+    },
+    "type": {
+      "type": "string",
+      "description": "Type of the account"
+    },
+    "state": {
+      "type": "string",
+      "description": "Current state of the account"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Account creation timestamp"
+    }
+  }
+}
