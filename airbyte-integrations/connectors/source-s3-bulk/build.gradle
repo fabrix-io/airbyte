@@ -1,0 +1,38 @@
+plugins {
+    id 'airbyte-bulk-connector'
+}
+
+application {
+    mainClass = 'io.airbyte.integrations.source.s3.S3Source'
+}
+
+airbyteBulkConnector {
+    core = 'extract'
+    toolkits = []
+    cdk = '0.342'
+}
+
+dependencies {
+    // AWS SDK v2 for S3 operations
+    implementation platform('software.amazon.awssdk:bom:2.25.11')
+    implementation 'software.amazon.awssdk:s3'
+    implementation 'software.amazon.awssdk:sts'
+    implementation 'software.amazon.awssdk:auth'
+    
+    // For file format parsing
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.15.2'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-avro:2.15.2'
+    implementation 'org.apache.parquet:parquet-avro:1.13.1'
+    implementation 'org.apache.avro:avro:1.11.3'
+    
+    // Hadoop dependencies for Parquet
+    implementation 'org.apache.hadoop:hadoop-common:3.3.4'
+    implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.3.4'
+    
+    // For JSON Lines format
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    
+    testImplementation 'io.mockk:mockk:1.13.12'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+}

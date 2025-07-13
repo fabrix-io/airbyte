@@ -1,0 +1,35 @@
+data:
+  ab_internal:
+    ql: 400
+    sl: 300
+  allowedHosts:
+    hosts:
+      - "*.s3.amazonaws.com"
+  connectorBuildOptions:
+    baseImage: docker.io/airbyte/airbyte-base-java-image:3.2.3@sha256:adf4096f92825f0f952a4e97ca83b35f8dce77e7a0bb87fb4e2b90b088cc81ec
+  connectorSubtype: file
+  connectorType: source
+  definitionId: 69589781-7828-43c5-9f63-8925b1c1ccc2
+  dockerImageTag: 5.0.0
+  dockerRepository: airbyte/source-s3-bulk
+  documentationUrl: https://docs.airbyte.com/integrations/sources/s3
+  githubIssueLabel: source-s3
+  icon: s3.svg
+  license: ELv2
+  maxSecondsBetweenMessages: 1
+  name: S3 (Bulk Extract CDK)
+  remoteRegistries:
+    pypi:
+      enabled: false
+  registryOverrides:
+    cloud:
+      enabled: true
+    oss:
+      enabled: true
+  releaseStage: alpha
+  supportLevel: community
+  supportsFileTransfer: true
+  tags:
+    - language:kotlin
+    - cdk:bulk
+metadataSpecVersion: "1.0"
