@@ -1,71 +1,200 @@
-<p align="center">
-  <a href="https://airbyte.com"><img src="https://assets.website-files.com/605e01bc25f7e19a82e74788/624d9c4a375a55100be6b257_Airbyte_logo_color_dark.svg" alt="Airbyte"></a>
-</p>
-<p align="center">
-    <em>Data integration platform for ELT pipelines from APIs, databases & files to databases, warehouses & lakes</em>
-</p>
-<p align="center">
-<a href="https://github.com/airbytehq/airbyte/stargazers/" target="_blank">
-    <img src="https://img.shields.io/github/stars/airbytehq/airbyte?style=social&label=Star&maxAge=2592000" alt="Test">
-</a>
-<a href="https://github.com/airbytehq/airbyte/releases" target="_blank">
-    <img src="https://img.shields.io/github/v/release/airbytehq/airbyte?color=white" alt="Release">
-</a>
-<a href="https://airbytehq.slack.com/" target="_blank">
-    <img src="https://img.shields.io/badge/slack-join-white.svg?logo=slack" alt="Slack">
-</a>
-<a href="https://www.youtube.com/c/AirbyteHQ/?sub_confirmation=1" target="_blank">
-    <img alt="YouTube Channel Views" src="https://img.shields.io/youtube/channel/views/UCQ_JWEFzs1_INqdhIO3kmrw?style=social">
-</a>
-<a href="https://github.com/airbytehq/airbyte/actions/workflows/gradle.yml" target="_blank">
-    <img src="https://img.shields.io/github/actions/workflow/status/airbytehq/airbyte/gradle.yml?branch=master" alt="Build">
-</a>
-<a href="https://github.com/airbytehq/airbyte/tree/master/docs/project-overview/licenses" target="_blank">
-    <img src="https://img.shields.io/static/v1?label=license&message=MIT&color=white" alt="License">
-</a>
-<a href="https://github.com/airbytehq/airbyte/tree/master/docs/project-overview/licenses" target="_blank">
-    <img src="https://img.shields.io/static/v1?label=license&message=ELv2&color=white" alt="License">
-</a>
-</p>
+# Airbyte Source Connector for HashiCorp Vault
 
-We believe that only an **open-source solution to data movement** can cover the long tail of data sources while empowering data engineers to customize existing connectors. Our ultimate vision is to help you move data from any source to any destination. Airbyte already provides the largest [catalog](https://docs.airbyte.com/integrations/) of 300+ connectors for APIs, databases, data warehouses, and data lakes.
+This is an Airbyte source connector for HashiCorp Vault that allows you to sync various Vault resources and configurations.
 
-![Airbyte Connections UI](https://github.com/airbytehq/airbyte/assets/38087517/35b01d0b-00bf-407b-87e6-a5cd5cd720b5)
-_Screenshot taken from [Airbyte Cloud](https://cloud.airbyte.com/signup)_.
+## Features
 
-### Getting Started
+The connector provides the following streams:
 
-- [Deploy Airbyte Open Source](https://docs.airbyte.com/quickstart/deploy-airbyte) or set up [Airbyte Cloud](https://docs.airbyte.com/cloud/getting-started-with-airbyte-cloud) to start centralizing your data.
-- Create connectors in minutes with our [no-code Connector Builder](https://docs.airbyte.com/connector-development/connector-builder-ui/overview) or [low-code CDK](https://docs.airbyte.com/connector-development/config-based/low-code-cdk-overview).
-- Explore popular use cases in our [tutorials](https://airbyte.com/tutorials).
-- Orchestrate Airbyte syncs with [Airflow](https://docs.airbyte.com/operator-guides/using-the-airflow-airbyte-operator), [Prefect](https://docs.airbyte.com/operator-guides/using-prefect-task), [Dagster](https://docs.airbyte.com/operator-guides/using-dagster-integration), [Kestra](https://docs.airbyte.com/operator-guides/using-kestra-plugin), or the [Airbyte API](https://reference.airbyte.com/reference/start).
+1. **vault** - General information about the Vault instance
+2. **users** - User entities and userpass auth method users
+3. **roles** - Roles from various auth methods (AppRole, Kubernetes, AWS, etc.)
+4. **policies** - ACL, RGP, and EGP policies
+5. **groups** - Identity groups (internal and external)
+6. **namespaces** - Namespaces (recursively scanned, Enterprise feature)
+7. **secrets** - Secret paths (recursively scanned, names only without values)
+8. **permissions** - Permission mappings for users and groups based on policies
+9. **secrets_engines** - Information about mounted secrets engines
+10. **mfa_config** - MFA configuration across the system
 
-Try it out yourself with our [demo app](https://demo.airbyte.io/), visit our [full documentation](https://docs.airbyte.com/), and learn more about [recent announcements](https://airbyte.com/blog-categories/company-updates). See our [registry](https://connectors.airbyte.com/files/generated_reports/connector_registry_report.html) for a full list of connectors already available in Airbyte or Airbyte Cloud.
+## Configuration
 
-### Join the Airbyte Community
+The connector uses AppRole authentication and requires the following parameters:
 
-The Airbyte community can be found in the [Airbyte Community Slack](https://airbyte.com/community), where you can ask questions and voice ideas. You can also ask for help in our [Airbyte Forum](https://github.com/airbytehq/airbyte/discussions), or join our [Office Hours](https://airbyte.io/daily-office-hours/). Airbyte's roadmap is publicly viewable on [GitHub](https://github.com/orgs/airbytehq/projects/37/views/1?pane=issue&itemId=26937554).
+- **vault_url** (required): The URL of your HashiCorp Vault instance
+- **role_id** (required): The Role ID for AppRole authentication
+- **secret_id** (required): The Secret ID for AppRole authentication
+- **namespace** (optional): Starting namespace (use 'admin' for HCP Vault Dedicated, 'root' for non-HCP, or leave empty)
+- **verify_ssl** (optional): Whether to verify SSL certificates (default: true)
 
-For videos and blogs on data engineering and building your data stack, check out Airbyte's [Content Hub](https://airbyte.com/content-hub), [YouTube](https://www.youtube.com/c/AirbyteHQ), and sign up for our [newsletter](https://airbyte.com/newsletter).
+### Example Configuration
 
-### Contributing
+```json
+{
+  "vault_url": "https://vault.example.com:8200",
+  "role_id": "your-role-id-here",
+  "secret_id": "your-secret-id-here",
+  "namespace": "admin",
+  "verify_ssl": true
+}
+```
 
-If you've found a problem with Airbyte, please open a [GitHub issue](https://github.com/airbytehq/airbyte/issues/new/choose). To contribute to Airbyte and see our Code of Conduct, please see the [contributing guide](https://docs.airbyte.com/contributing-to-airbyte/). We have a list of [good first issues](https://github.com/airbytehq/airbyte/labels/contributor-program) that contain bugs that have a relatively limited scope. This is a great place to get started, gain experience, and get familiar with our contribution process.
+## Required Vault Permissions
 
-### Security
+The AppRole used by the connector needs appropriate permissions to read the various resources. Here's a sample policy:
 
-Airbyte takes security issues very seriously. **Please do not file GitHub issues or post on our public forum for security vulnerabilities**. Email `security@airbyte.io` if you believe you have uncovered a vulnerability. In the message, try to provide a description of the issue and ideally a way of reproducing it. The security team will get back to you as soon as possible.
+```hcl
+# Read vault health and system info
+path "sys/health" {
+  capabilities = ["read"]
+}
 
-[Airbyte Enterprise](https://airbyte.com/airbyte-enterprise) also offers additional security features (among others) on top of Airbyte open-source.
+path "sys/license/status" {
+  capabilities = ["read"]
+}
 
-### License
+path "sys/ha-status" {
+  capabilities = ["read"]
+}
 
-See the [LICENSE](docs/project-overview/licenses/) file for licensing information, and our [FAQ](docs/project-overview/licenses/license-faq.md) for any questions you may have on that topic.
+path "sys/init" {
+  capabilities = ["read"]
+}
 
-### Thank You
+# List and read auth methods
+path "sys/auth" {
+  capabilities = ["read"]
+}
 
-Airbyte would not be possible without the support and assistance of other open-source tools and companies! Visit our [thank you page](THANK-YOU.md) to learn more about how we build Airbyte.
+path "auth/+/users/*" {
+  capabilities = ["read", "list"]
+}
 
-<a href="https://github.com/airbytehq/airbyte/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=airbytehq/airbyte"/>
-</a>
+path "auth/+/role/*" {
+  capabilities = ["read", "list"]
+}
+
+# List and read identity entities and groups
+path "identity/entity/*" {
+  capabilities = ["read", "list"]
+}
+
+path "identity/group/*" {
+  capabilities = ["read", "list"]
+}
+
+# List and read policies
+path "sys/policies/*" {
+  capabilities = ["read", "list"]
+}
+
+# List namespaces (Enterprise)
+path "sys/namespaces/*" {
+  capabilities = ["read", "list"]
+}
+
+# List and read mounts
+path "sys/mounts" {
+  capabilities = ["read"]
+}
+
+path "sys/mounts/*" {
+  capabilities = ["read"]
+}
+
+# List secrets (adjust based on your secret engines)
+path "+/metadata/*" {
+  capabilities = ["list", "read"]
+}
+
+path "+/*" {
+  capabilities = ["list"]
+}
+
+# MFA configuration
+path "identity/mfa/*" {
+  capabilities = ["read", "list"]
+}
+
+path "auth/+/mfa_config" {
+  capabilities = ["read"]
+}
+
+path "auth/+/duo/config" {
+  capabilities = ["read"]
+}
+```
+
+## Usage
+
+### Standalone Usage
+
+1. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Create configuration:
+   ```bash
+   cp secrets/config.json.example secrets/config.json
+   # Edit secrets/config.json with your credentials
+   ```
+
+3. Test connection:
+   ```bash
+   python main.py check --config secrets/config.json
+   ```
+
+4. Discover schema:
+   ```bash
+   python main.py discover --config secrets/config.json
+   ```
+
+5. Read data:
+   ```bash
+   python main.py read --config secrets/config.json --catalog configured_catalog.json
+   ```
+
+### Docker Usage
+
+1. Build the image:
+   ```bash
+   docker build -t airbyte/source-hashicorp-vault:latest .
+   ```
+
+2. Run the connector:
+   ```bash
+   docker run --rm -v $(pwd)/secrets:/secrets airbyte/source-hashicorp-vault:latest \
+     check --config /secrets/config.json
+   ```
+
+## Development
+
+### Testing
+
+Run the test script to verify the connector works:
+
+```bash
+python test_connector.py
+```
+
+### Adding New Streams
+
+To add a new stream:
+
+1. Create a new file in `source_hashicorp_vault/streams/`
+2. Inherit from `VaultBaseStream`
+3. Implement the required methods
+4. Add the stream to `source_hashicorp_vault/streams/__init__.py`
+5. Add the stream to the `streams()` method in `source.py`
+
+## Notes
+
+- The connector only reads secret **paths**, not the actual secret values
+- Some features (namespaces, RGP/EGP policies, Identity MFA) require Vault Enterprise
+- The connector handles errors gracefully and will skip resources it doesn't have access to
+- Recursive operations (namespaces, secrets) are performed carefully to avoid overwhelming the Vault server
+
+## License
+
+MIT

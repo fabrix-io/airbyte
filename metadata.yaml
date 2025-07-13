@@ -1,0 +1,24 @@
+data:
+  allowedHosts:
+    hosts:
+      - "${vault_url}"
+  connectorSubtype: api
+  connectorType: source
+  definitionId: b8f5c821-9e4d-4a8f-a2e1-8c9d7e3f5a2b
+  dockerImageTag: 0.1.0
+  dockerRepository: airbyte/source-hashicorp-vault
+  githubIssueLabel: source-hashicorp-vault
+  icon: vault.svg
+  license: MIT
+  name: HashiCorp Vault
+  registries:
+    cloud:
+      enabled: true
+    oss:
+      enabled: true
+  releaseStage: alpha
+  documentationUrl: https://docs.airbyte.com/integrations/sources/hashicorp-vault
+  tags:
+    - language:python
+    - cdk:python
+metadataSpecVersion: "1.0"

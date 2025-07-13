@@ -1,0 +1,2 @@
+airbyte-cdk>=0.51.0
+hvac>=1.2.1

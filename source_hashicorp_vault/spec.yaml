@@ -1,0 +1,44 @@
+documentationUrl: https://docs.airbyte.io/integrations/sources/hashicorp-vault
+connectionSpecification:
+  type: object
+  title: HashiCorp Vault Source Spec
+  required:
+    - vault_url
+    - role_id
+    - secret_id
+  properties:
+    vault_url:
+      type: string
+      title: Vault URL
+      description: The URL of your HashiCorp Vault instance (e.g., https://vault.example.com:8200)
+      examples:
+        - https://vault.example.com:8200
+        - http://localhost:8200
+      order: 0
+    role_id:
+      type: string
+      title: Role ID
+      description: The Role ID for AppRole authentication
+      airbyte_secret: true
+      order: 1
+    secret_id:
+      type: string
+      title: Secret ID
+      description: The Secret ID for AppRole authentication
+      airbyte_secret: true
+      order: 2
+    namespace:
+      type: string
+      title: Namespace
+      description: The starting namespace to scan from. Use 'root' for non-HCP Vault or 'admin' for HCP Vault Dedicated. Leave empty to use the default namespace.
+      examples:
+        - root
+        - admin
+        - my-namespace
+      order: 3
+    verify_ssl:
+      type: boolean
+      title: Verify SSL Certificate
+      description: Whether to verify the SSL certificate when connecting to Vault
+      default: true
+      order: 4
