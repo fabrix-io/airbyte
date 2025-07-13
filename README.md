@@ -1,71 +1,209 @@
-<p align="center">
-  <a href="https://airbyte.com"><img src="https://assets.website-files.com/605e01bc25f7e19a82e74788/624d9c4a375a55100be6b257_Airbyte_logo_color_dark.svg" alt="Airbyte"></a>
-</p>
-<p align="center">
-    <em>Data integration platform for ELT pipelines from APIs, databases & files to databases, warehouses & lakes</em>
-</p>
-<p align="center">
-<a href="https://github.com/airbytehq/airbyte/stargazers/" target="_blank">
-    <img src="https://img.shields.io/github/stars/airbytehq/airbyte?style=social&label=Star&maxAge=2592000" alt="Test">
-</a>
-<a href="https://github.com/airbytehq/airbyte/releases" target="_blank">
-    <img src="https://img.shields.io/github/v/release/airbytehq/airbyte?color=white" alt="Release">
-</a>
-<a href="https://airbytehq.slack.com/" target="_blank">
-    <img src="https://img.shields.io/badge/slack-join-white.svg?logo=slack" alt="Slack">
-</a>
-<a href="https://www.youtube.com/c/AirbyteHQ/?sub_confirmation=1" target="_blank">
-    <img alt="YouTube Channel Views" src="https://img.shields.io/youtube/channel/views/UCQ_JWEFzs1_INqdhIO3kmrw?style=social">
-</a>
-<a href="https://github.com/airbytehq/airbyte/actions/workflows/gradle.yml" target="_blank">
-    <img src="https://img.shields.io/github/actions/workflow/status/airbytehq/airbyte/gradle.yml?branch=master" alt="Build">
-</a>
-<a href="https://github.com/airbytehq/airbyte/tree/master/docs/project-overview/licenses" target="_blank">
-    <img src="https://img.shields.io/static/v1?label=license&message=MIT&color=white" alt="License">
-</a>
-<a href="https://github.com/airbytehq/airbyte/tree/master/docs/project-overview/licenses" target="_blank">
-    <img src="https://img.shields.io/static/v1?label=license&message=ELv2&color=white" alt="License">
-</a>
-</p>
+# HashiCorp Vault Scanner
 
-We believe that only an **open-source solution to data movement** can cover the long tail of data sources while empowering data engineers to customize existing connectors. Our ultimate vision is to help you move data from any source to any destination. Airbyte already provides the largest [catalog](https://docs.airbyte.com/integrations/) of 300+ connectors for APIs, databases, data warehouses, and data lakes.
+A Python-based scanner for HashiCorp Vault that uses AppRole authentication to collect configuration and metadata information across multiple data streams.
 
-![Airbyte Connections UI](https://github.com/airbytehq/airbyte/assets/38087517/35b01d0b-00bf-407b-87e6-a5cd5cd720b5)
-_Screenshot taken from [Airbyte Cloud](https://cloud.airbyte.com/signup)_.
+## Features
 
-### Getting Started
+The scanner collects information from the following streams:
 
-- [Deploy Airbyte Open Source](https://docs.airbyte.com/quickstart/deploy-airbyte) or set up [Airbyte Cloud](https://docs.airbyte.com/cloud/getting-started-with-airbyte-cloud) to start centralizing your data.
-- Create connectors in minutes with our [no-code Connector Builder](https://docs.airbyte.com/connector-development/connector-builder-ui/overview) or [low-code CDK](https://docs.airbyte.com/connector-development/config-based/low-code-cdk-overview).
-- Explore popular use cases in our [tutorials](https://airbyte.com/tutorials).
-- Orchestrate Airbyte syncs with [Airflow](https://docs.airbyte.com/operator-guides/using-the-airflow-airbyte-operator), [Prefect](https://docs.airbyte.com/operator-guides/using-prefect-task), [Dagster](https://docs.airbyte.com/operator-guides/using-dagster-integration), [Kestra](https://docs.airbyte.com/operator-guides/using-kestra-plugin), or the [Airbyte API](https://reference.airbyte.com/reference/start).
+1. **Vault Info** - General information about the Vault instance (version, HA status, replication, etc.)
+2. **Users** - User accounts (currently supports userpass auth method)
+3. **Roles** - AppRole configurations
+4. **Policies** - ACL policies and their rules
+5. **Groups** - Identity groups and their members
+6. **Namespaces** - Namespace hierarchy (scanned recursively)
+7. **Secrets** - Secret metadata without values (scanned recursively)
+8. **Permissions** - User and group policy assignments
 
-Try it out yourself with our [demo app](https://demo.airbyte.io/), visit our [full documentation](https://docs.airbyte.com/), and learn more about [recent announcements](https://airbyte.com/blog-categories/company-updates). See our [registry](https://connectors.airbyte.com/files/generated_reports/connector_registry_report.html) for a full list of connectors already available in Airbyte or Airbyte Cloud.
+## Installation
 
-### Join the Airbyte Community
+```bash
+pip install -r requirements.txt
+```
 
-The Airbyte community can be found in the [Airbyte Community Slack](https://airbyte.com/community), where you can ask questions and voice ideas. You can also ask for help in our [Airbyte Forum](https://github.com/airbytehq/airbyte/discussions), or join our [Office Hours](https://airbyte.io/daily-office-hours/). Airbyte's roadmap is publicly viewable on [GitHub](https://github.com/orgs/airbytehq/projects/37/views/1?pane=issue&itemId=26937554).
+## Usage
 
-For videos and blogs on data engineering and building your data stack, check out Airbyte's [Content Hub](https://airbyte.com/content-hub), [YouTube](https://www.youtube.com/c/AirbyteHQ), and sign up for our [newsletter](https://airbyte.com/newsletter).
+### Basic Usage
 
-### Contributing
+```bash
+python vault_scanner.py \
+    --vault-url https://vault.example.com:8200 \
+    --role-id your-role-id \
+    --secret-id your-secret-id
+```
 
-If you've found a problem with Airbyte, please open a [GitHub issue](https://github.com/airbytehq/airbyte/issues/new/choose). To contribute to Airbyte and see our Code of Conduct, please see the [contributing guide](https://docs.airbyte.com/contributing-to-airbyte/). We have a list of [good first issues](https://github.com/airbytehq/airbyte/labels/contributor-program) that contain bugs that have a relatively limited scope. This is a great place to get started, gain experience, and get familiar with our contribution process.
+### Full Options
 
-### Security
+```bash
+python vault_scanner.py \
+    --vault-url https://vault.example.com:8200 \
+    --role-id your-role-id \
+    --secret-id your-secret-id \
+    --namespace admin \
+    --output results.json \
+    --format json \
+    --timeout 30 \
+    --no-verify-ssl
+```
 
-Airbyte takes security issues very seriously. **Please do not file GitHub issues or post on our public forum for security vulnerabilities**. Email `security@airbyte.io` if you believe you have uncovered a vulnerability. In the message, try to provide a description of the issue and ideally a way of reproducing it. The security team will get back to you as soon as possible.
+### Parameters
 
-[Airbyte Enterprise](https://airbyte.com/airbyte-enterprise) also offers additional security features (among others) on top of Airbyte open-source.
+- `--vault-url` (required): The URL of your Vault server
+- `--role-id` (required): AppRole role ID for authentication
+- `--secret-id` (required): AppRole secret ID for authentication
+- `--namespace`: Starting namespace (auto-detected if not provided)
+  - For HCP Vault: defaults to "admin"
+  - For self-hosted: defaults to root namespace
+- `--output`: Output file path (default: scan_results.json)
+- `--format`: Output format - "json" or "summary" (default: json)
+- `--timeout`: Request timeout in seconds (default: 30)
+- `--no-verify-ssl`: Disable SSL certificate verification
 
-### License
+## Namespace Auto-Detection
 
-See the [LICENSE](docs/project-overview/licenses/) file for licensing information, and our [FAQ](docs/project-overview/licenses/license-faq.md) for any questions you may have on that topic.
+The scanner automatically detects the appropriate starting namespace:
+- **HCP Vault Dedicated**: Uses "admin" namespace by default
+- **Self-hosted Vault**: Uses root namespace by default
 
-### Thank You
+You can override this behavior by explicitly providing the `--namespace` parameter.
 
-Airbyte would not be possible without the support and assistance of other open-source tools and companies! Visit our [thank you page](THANK-YOU.md) to learn more about how we build Airbyte.
+## Output Format
 
-<a href="https://github.com/airbytehq/airbyte/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=airbytehq/airbyte"/>
-</a>
+### JSON Format
+
+The scanner outputs a comprehensive JSON file with all collected data:
+
+```json
+{
+  "vault_info": {
+    "initialized": true,
+    "sealed": false,
+    "version": "1.15.0",
+    "cluster_name": "vault-cluster",
+    ...
+  },
+  "users": [...],
+  "roles": [...],
+  "policies": [...],
+  "groups": [...],
+  "namespaces": [...],
+  "secrets": [...],
+  "permissions": [...]
+}
+```
+
+### Summary Format
+
+When using `--format summary`, the scanner prints a quick overview:
+
+```
+=== Vault Scan Summary ===
+Vault Version: 1.15.0
+Users: 25
+Roles: 10
+Policies: 15
+Groups: 5
+Namespaces: 3
+Secrets: 150
+Permissions: 30
+```
+
+## Required Vault Permissions
+
+The AppRole used for scanning needs the following permissions (example policy):
+
+```hcl
+# Read system health and status
+path "sys/health" {
+  capabilities = ["read"]
+}
+
+path "sys/leader" {
+  capabilities = ["read"]
+}
+
+# Read auth methods and users
+path "auth/userpass/users" {
+  capabilities = ["list"]
+}
+path "auth/userpass/users/*" {
+  capabilities = ["read"]
+}
+
+# Read policies
+path "sys/policies/acl/*" {
+  capabilities = ["list", "read"]
+}
+
+# Read AppRole roles
+path "auth/approle/role" {
+  capabilities = ["list"]
+}
+path "auth/approle/role/*" {
+  capabilities = ["read"]
+}
+
+# Read identity groups
+path "identity/group" {
+  capabilities = ["list"]
+}
+path "identity/group/*" {
+  capabilities = ["read"]
+}
+
+# Read namespaces
+path "sys/namespaces" {
+  capabilities = ["list", "read"]
+}
+path "sys/namespaces/*" {
+  capabilities = ["list", "read"]
+}
+
+# Read secrets metadata (KVv2 example)
+path "secret/metadata/*" {
+  capabilities = ["list", "read"]
+}
+```
+
+## Limitations
+
+1. **User scanning**: Currently only supports the userpass auth method. Other auth methods (LDAP, OIDC, etc.) would need additional implementation.
+
+2. **Roles**: Only scans AppRole roles. Other role types (AWS, Kubernetes, etc.) would need additional implementation.
+
+3. **Secrets**: Only scans KVv2 secrets engine metadata. Other secret engines would need additional implementation.
+
+4. **No secret values**: The scanner only retrieves metadata about secrets, not the actual secret values.
+
+## Security Considerations
+
+- Store your AppRole credentials securely
+- Use the least privileged policy necessary for scanning
+- The scanner only reads metadata, not secret values
+- Consider using short-lived secret IDs that expire after use
+
+## Example: Setting Up Scanner Credentials
+
+1. Create the read-only policy (use the provided `setup-fabrix-read.sh` script)
+2. Generate AppRole credentials:
+   ```bash
+   vault read auth/approle/role/fabrix-read/role-id
+   vault write -f auth/approle/role/fabrix-read/secret-id
+   ```
+3. Use the generated role-id and secret-id with the scanner
+
+## Troubleshooting
+
+### Authentication Errors
+- Verify your role-id and secret-id are correct
+- Check that the AppRole is enabled at the expected path
+- Ensure you're using the correct namespace
+
+### Permission Errors
+- Review the policy attached to your AppRole
+- Ensure the policy has the necessary read/list permissions
+- Check namespace-specific permissions
+
+### SSL Errors
+- Use `--no-verify-ssl` for self-signed certificates (not recommended for production)
+- Ensure your Vault certificate is properly configured
