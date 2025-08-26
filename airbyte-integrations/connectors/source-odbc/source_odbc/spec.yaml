@@ -1,0 +1,116 @@
+documentationUrl: https://docs.airbyte.com/integrations/sources/odbc
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: ODBC Connection Specification
+  type: object
+  required:
+    - dsn
+    - username
+    - password
+    - server
+    - database
+  properties:
+    dsn:
+      type: string
+      title: Data Source Name (DSN)
+      description: The ODBC Data Source Name or connection string
+      examples:
+        - "DRIVER={ODBC Driver 18 for SQL Server};SERVER=myserver;DATABASE=mydatabase;Trusted_Connection=yes;"
+        - "MyDSN"
+      order: 0
+    server:
+      type: string
+      title: Server
+      description: The server hostname or IP address
+      examples:
+        - "sqlserver.domain.com"
+        - "192.168.1.100"
+      order: 1
+    database:
+      type: string
+      title: Database
+      description: The database name to connect to
+      examples:
+        - "MyDatabase"
+        - "AdventureWorks"
+      order: 2
+    username:
+      type: string
+      title: Username
+      description: The username for Active Directory authentication
+      examples:
+        - "domain\\user"
+        - "user@domain.com"
+      order: 3
+    password:
+      type: string
+      title: Password
+      description: The password for Active Directory authentication
+      airbyte_secret: true
+      order: 4
+    port:
+      type: integer
+      title: Port
+      description: "The port number (default: 1433 for SQL Server)"
+      default: 1433
+      examples:
+        - 1433
+        - 1521
+      order: 5
+    driver:
+      type: string
+      title: ODBC Driver
+      description: The ODBC driver name to use
+      default: "ODBC Driver 18 for SQL Server"
+      examples:
+        - "ODBC Driver 18 for SQL Server"
+        - "ODBC Driver 17 for SQL Server"
+        - "Oracle in OraClient19Home1"
+      order: 6
+    authentication_type:
+      type: string
+      title: Authentication Type
+      description: The authentication method to use
+      default: "ActiveDirectory"
+      enum:
+        - "ActiveDirectory"
+        - "SqlServerAuthentication"
+        - "ActiveDirectoryIntegrated"
+        - "ActiveDirectoryPassword"
+        - "ActiveDirectoryKerberos"
+      order: 7
+    # Kerberos-specific configuration
+    realm:
+      type: string
+      title: Kerberos Realm
+      description: The Kerberos realm (domain) for Active Directory authentication
+      examples:
+        - "FABRIX.LOCAL"
+        - "COMPANY.COM"
+      order: 8
+    kdc_host:
+      type: string
+      title: KDC Host
+      description: The Kerberos Key Distribution Center (domain controller) hostname or IP
+      examples:
+        - "dc01.company.com"
+        - "192.168.1.10"
+      order: 9
+    encrypt:
+      type: boolean
+      title: Encrypt Connection
+      description: Use encrypted connection
+      default: true
+      order: 10
+    trust_server_certificate:
+      type: boolean
+      title: Trust Server Certificate
+      description: Trust the server certificate (use with caution)
+      default: false
+      order: 11
+    connection_timeout:
+      type: integer
+      title: Connection Timeout
+      description: Connection timeout in seconds
+      default: 30
+      order: 12

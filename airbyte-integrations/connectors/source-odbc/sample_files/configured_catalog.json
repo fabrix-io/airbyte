@@ -1,0 +1,24 @@
+{
+  "streams": [
+    {
+      "stream": {
+        "name": "hello_world",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "id": {"type": "integer", "description": "Unique identifier"},
+            "message": {"type": "string", "description": "Hello world message"},
+            "timestamp": {"type": "string", "description": "Current timestamp from database"},
+            "database_name": {"type": "string", "description": "Name of the connected database"},
+            "server_version": {"type": ["string", "null"], "description": "Database server version"},
+            "current_user": {"type": ["string", "null"], "description": "Current authenticated user"}
+          }
+        },
+        "supported_sync_modes": ["full_refresh"]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    }
+  ]
+}
