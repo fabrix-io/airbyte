@@ -22,12 +22,11 @@ class DatabaseMetadataStream(OdbcStream):
             "type": "object",
             "properties": {
                 "catalog_name": {"type": "string", "description": "Database catalog name"},
-                "schema_count": {"type": ["integer", "null"], "description": "Number of schemas in this catalog"},
-                "table_count": {"type": ["integer", "null"], "description": "Number of tables in this catalog"},
-                "view_count": {"type": ["integer", "null"], "description": "Number of views in this catalog"},
-                "procedure_count": {"type": ["integer", "null"], "description": "Number of stored procedures in this catalog"},
-                "function_count": {"type": ["integer", "null"], "description": "Number of functions in this catalog"},
-                "remarks": {"type": ["string", "null"], "description": "Catalog remarks/description"},
+                "schema_count": {"type": ["integer"], "description": "Number of schemas in this catalog"},
+                "table_count": {"type": ["integer"], "description": "Number of tables in this catalog"},
+                "view_count": {"type": ["integer"], "description": "Number of views in this catalog"},
+                "procedure_count": {"type": ["integer"], "description": "Number of stored procedures in this catalog"},
+                "function_count": {"type": ["integer"], "description": "Number of functions in this catalog"},
             }
         }
     
@@ -102,7 +101,6 @@ class DatabaseMetadataStream(OdbcStream):
                         "view_count": view_count,
                         "procedure_count": procedure_count,
                         "function_count": procedure_count,  # Functions often same as procedures in ODBC
-                        "remarks": f"Catalog information for {catalog_name or 'default'}",
                     }
                     yield record
                     

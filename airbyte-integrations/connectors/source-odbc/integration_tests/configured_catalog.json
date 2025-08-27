@@ -8,12 +8,11 @@
           "type": "object",
           "properties": {
             "catalog_name": {"type": "string", "description": "Database catalog name"},
-            "schema_count": {"type": ["integer", "null"], "description": "Number of schemas in this catalog"},
-            "table_count": {"type": ["integer", "null"], "description": "Number of tables in this catalog"},
-            "view_count": {"type": ["integer", "null"], "description": "Number of views in this catalog"},
-            "procedure_count": {"type": ["integer", "null"], "description": "Number of stored procedures in this catalog"},
-            "function_count": {"type": ["integer", "null"], "description": "Number of functions in this catalog"},
-            "remarks": {"type": ["string", "null"], "description": "Catalog remarks/description"}
+            "schema_count": {"type": ["integer"], "description": "Number of schemas in this catalog"},
+            "table_count": {"type": ["integer"], "description": "Number of tables in this catalog"},
+            "view_count": {"type": ["integer"], "description": "Number of views in this catalog"},
+            "procedure_count": {"type": ["integer"], "description": "Number of stored procedures in this catalog"},
+            "function_count": {"type": ["integer"], "description": "Number of functions in this catalog"}
           }
         },
         "supported_sync_modes": ["full_refresh"],
@@ -72,28 +71,22 @@
           "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
-            "object_id": {"type": "integer", "description": "Table object ID"},
-            "column_id": {"type": "integer", "description": "Column ID"},
-            "schema_name": {"type": "string", "description": "Schema name"},
+            "table_catalog": {"type": ["string", "null"], "description": "Database catalog name"},
+            "table_schema": {"type": "string", "description": "Schema name"},
             "table_name": {"type": "string", "description": "Table name"},
             "column_name": {"type": "string", "description": "Column name"},
-            "data_type": {"type": "string", "description": "Data type name"},
-            "max_length": {"type": ["integer", "null"], "description": "Maximum length"},
-            "precision": {"type": ["integer", "null"], "description": "Numeric precision"},
-            "scale": {"type": ["integer", "null"], "description": "Numeric scale"},
-            "is_nullable": {"type": "boolean", "description": "Is nullable"},
-            "is_identity": {"type": "boolean", "description": "Is identity column"},
-            "is_computed": {"type": "boolean", "description": "Is computed column"},
-            "default_definition": {"type": ["string", "null"], "description": "Default value definition"},
-            "collation_name": {"type": ["string", "null"], "description": "Column collation"},
-            "is_primary_key": {"type": "boolean", "description": "Is part of primary key"},
-            "is_foreign_key": {"type": "boolean", "description": "Is part of foreign key"},
-            "ordinal_position": {"type": "integer", "description": "Column position in table"},
-            "full_data_type": {"type": "string", "description": "Complete data type definition"}
+            "ordinal_position": {"type": ["integer", "null"], "description": "Column position in table"},
+            "column_default": {"type": ["string", "null"], "description": "Default value"},
+            "is_nullable": {"type": ["string", "null"], "description": "YES if nullable, NO if not"},
+            "data_type": {"type": ["string", "null"], "description": "Data type name"},
+            "character_maximum_length": {"type": ["integer", "null"], "description": "Maximum character length"},
+            "numeric_precision": {"type": ["integer", "null"], "description": "Numeric precision"},
+            "numeric_scale": {"type": ["integer", "null"], "description": "Numeric scale"},
+            "datetime_precision": {"type": ["integer", "null"], "description": "DateTime precision"}
           }
         },
         "supported_sync_modes": ["full_refresh"],
-        "source_defined_primary_key": [["object_id"], ["column_id"]],
+        "source_defined_primary_key": [["table_catalog"], ["table_schema"], ["table_name"], ["column_name"]],
         "is_resumable": false
       },
       "sync_mode": "full_refresh",

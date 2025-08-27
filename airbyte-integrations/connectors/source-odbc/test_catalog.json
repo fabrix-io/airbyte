@@ -8,12 +8,11 @@
           "type": "object",
           "properties": {
             "catalog_name": {"type": "string", "description": "Database catalog name"},
-            "schema_count": {"type": ["integer", "null"], "description": "Number of schemas in this catalog"},
-            "table_count": {"type": ["integer", "null"], "description": "Number of tables in this catalog"},
-            "view_count": {"type": ["integer", "null"], "description": "Number of views in this catalog"},
-            "procedure_count": {"type": ["integer", "null"], "description": "Number of stored procedures in this catalog"},
-            "function_count": {"type": ["integer", "null"], "description": "Number of functions in this catalog"},
-            "remarks": {"type": ["string", "null"], "description": "Catalog remarks/description"}
+            "schema_count": {"type": ["integer"], "description": "Number of schemas in this catalog"},
+            "table_count": {"type": ["integer"], "description": "Number of tables in this catalog"},
+            "view_count": {"type": ["integer"], "description": "Number of views in this catalog"},
+            "procedure_count": {"type": ["integer"], "description": "Number of stored procedures in this catalog"},
+            "function_count": {"type": ["integer"], "description": "Number of functions in this catalog"}
           }
         },
         "supported_sync_modes": ["full_refresh"],
