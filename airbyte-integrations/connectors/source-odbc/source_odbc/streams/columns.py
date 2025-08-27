@@ -124,9 +124,9 @@ class ColumnsStream(OdbcStream):
             
             cursor.close()
             conn.close()
-            self._cleanup_temp_files()
+            self._connection_manager.cleanup_temp_files()
                     
         except Exception as e:
-            self._cleanup_temp_files()
+            self._connection_manager.cleanup_temp_files()
             self.logger.error(f"Error reading columns: {str(e)}")
             raise e
