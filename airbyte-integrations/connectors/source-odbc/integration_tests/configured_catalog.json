@@ -7,21 +7,17 @@
           "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
-            "database_name": {"type": "string", "description": "Database name"},
-            "database_id": {"type": "integer", "description": "Database ID"},
-            "collation_name": {"type": ["string", "null"], "description": "Database collation"},
-            "create_date": {"type": ["string", "null"], "description": "Database creation date"},
-            "compatibility_level": {"type": ["integer", "null"], "description": "Compatibility level"},
-            "state_desc": {"type": ["string", "null"], "description": "Database state"},
-            "is_read_only": {"type": "boolean", "description": "Is database read-only"},
-            "is_auto_close_on": {"type": "boolean", "description": "Auto close setting"},
-            "is_auto_shrink_on": {"type": "boolean", "description": "Auto shrink setting"},
-            "recovery_model_desc": {"type": ["string", "null"], "description": "Recovery model"},
-            "page_verify_option_desc": {"type": ["string", "null"], "description": "Page verify option"}
+            "catalog_name": {"type": "string", "description": "Database catalog name"},
+            "schema_count": {"type": ["integer", "null"], "description": "Number of schemas in this catalog"},
+            "table_count": {"type": ["integer", "null"], "description": "Number of tables in this catalog"},
+            "view_count": {"type": ["integer", "null"], "description": "Number of views in this catalog"},
+            "procedure_count": {"type": ["integer", "null"], "description": "Number of stored procedures in this catalog"},
+            "function_count": {"type": ["integer", "null"], "description": "Number of functions in this catalog"},
+            "remarks": {"type": ["string", "null"], "description": "Catalog remarks/description"}
           }
         },
         "supported_sync_modes": ["full_refresh"],
-        "source_defined_primary_key": [["database_name"]],
+        "source_defined_primary_key": [["catalog_name"]],
         "is_resumable": false
       },
       "sync_mode": "full_refresh",

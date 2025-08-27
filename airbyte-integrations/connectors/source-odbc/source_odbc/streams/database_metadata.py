@@ -1,10 +1,12 @@
 from typing import Any, Iterable, Mapping, Optional
 
+import pyodbc
+
 from .base import OdbcStream
 
 
 class DatabaseMetadataStream(OdbcStream):
-    """Stream to get database metadata and settings."""
+    """Stream to get catalog information using ODBC catalog functions."""
     
     @property
     def name(self) -> str:
@@ -12,24 +14,20 @@ class DatabaseMetadataStream(OdbcStream):
     
     @property
     def primary_key(self) -> Optional[str]:
-        return "database_id"
+        return "catalog_name"
 
     def get_json_schema(self) -> Mapping[str, Any]:
         return {
             "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
             "properties": {
-                "database_name": {"type": "string", "description": "Database name"},
-                "database_id": {"type": "integer", "description": "Database ID"},
-                "collation_name": {"type": ["string", "null"], "description": "Database collation"},
-                "create_date": {"type": ["string", "null"], "description": "Database creation date"},
-                "compatibility_level": {"type": ["integer", "null"], "description": "Compatibility level"},
-                "state_desc": {"type": ["string", "null"], "description": "Database state"},
-                "is_read_only": {"type": "boolean", "description": "Is database read-only"},
-                "is_auto_close_on": {"type": "boolean", "description": "Auto close setting"},
-                "is_auto_shrink_on": {"type": "boolean", "description": "Auto shrink setting"},
-                "recovery_model_desc": {"type": ["string", "null"], "description": "Recovery model"},
-                "page_verify_option_desc": {"type": ["string", "null"], "description": "Page verify option"},
+                "catalog_name": {"type": "string", "description": "Database catalog name"},
+                "schema_count": {"type": ["integer", "null"], "description": "Number of schemas in this catalog"},
+                "table_count": {"type": ["integer", "null"], "description": "Number of tables in this catalog"},
+                "view_count": {"type": ["integer", "null"], "description": "Number of views in this catalog"},
+                "procedure_count": {"type": ["integer", "null"], "description": "Number of stored procedures in this catalog"},
+                "function_count": {"type": ["integer", "null"], "description": "Number of functions in this catalog"},
+                "remarks": {"type": ["string", "null"], "description": "Catalog remarks/description"},
             }
         }
     
@@ -40,46 +38,74 @@ class DatabaseMetadataStream(OdbcStream):
         stream_slice: Optional[Mapping[str, Any]] = None,
         stream_state: Optional[Mapping[str, Any]] = None,
     ) -> Iterable[Mapping[str, Any]]:
-        """Read database metadata."""
+        """Read catalog information using ODBC getinfo functions."""
         
         try:
             with self._get_odbc_connection() as conn:
                 with conn.cursor() as cursor:
-                    query = """
-                    SELECT 
-                        name as database_name,
-                        database_id,
-                        collation_name,
-                        create_date,
-                        compatibility_level,
-                        state_desc,
-                        is_read_only,
-                        is_auto_close_on,
-                        is_auto_shrink_on,
-                        recovery_model_desc,
-                        page_verify_option_desc
-                    FROM sys.databases 
-                    WHERE name = DB_NAME()
-                    """
+                    # Get catalog/database name directly using ODBC getinfo
+                    catalog_name = None
+                    try:
+                        # Try to get catalog name using ODBC constants
+                        if hasattr(pyodbc, 'SQL_DATABASE_NAME'):
+                            catalog_name = conn.getinfo(pyodbc.SQL_DATABASE_NAME)
+                        elif hasattr(pyodbc, 'SQL_CATALOG_NAME'):
+                            catalog_name = conn.getinfo(pyodbc.SQL_CATALOG_NAME)
+                        else:
+                            # Fallback to numeric constants
+                            try:
+                                catalog_name = conn.getinfo(16)  # SQL_DATABASE_NAME
+                            except Exception:
+                                catalog_name = conn.getinfo(17)  # SQL_CATALOG_NAME
+                    except Exception as catalog_error:
+                        self.logger.warning(f"Could not retrieve catalog name: {str(catalog_error)}")
+                        catalog_name = self._config.get('database', 'default')
                     
-                    cursor.execute(query)
+                    # Count objects in the catalog using ODBC catalog functions
+                    schema_count = 0
+                    table_count = 0
+                    view_count = 0
+                    procedure_count = 0
                     
-                    for row in cursor:
-                        record = {
-                            "database_name": row.database_name,
-                            "database_id": row.database_id,
-                            "collation_name": row.collation_name,
-                            "create_date": str(row.create_date) if row.create_date else None,
-                            "compatibility_level": row.compatibility_level,
-                            "state_desc": row.state_desc,
-                            "is_read_only": bool(row.is_read_only),
-                            "is_auto_close_on": bool(row.is_auto_close_on),
-                            "is_auto_shrink_on": bool(row.is_auto_shrink_on),
-                            "recovery_model_desc": row.recovery_model_desc,
-                            "page_verify_option_desc": row.page_verify_option_desc,
-                        }
-                        yield record
+                    # Count tables and views
+                    try:
+                        schemas = set()
+                        for row in cursor.tables():
+                            table_type = getattr(row, 'table_type', '')
+                            schema = getattr(row, 'table_schem', None)
+                            
+                            if schema:
+                                schemas.add(schema)
+                            
+                            if table_type in ('TABLE', 'BASE TABLE'):
+                                table_count += 1
+                            elif table_type == 'VIEW':
+                                view_count += 1
+                        
+                        schema_count = len(schemas)
+                        
+                    except Exception as table_error:
+                        self.logger.warning(f"Could not retrieve table information: {str(table_error)}")
+                    
+                    # Count procedures
+                    try:
+                        for row in cursor.procedures():
+                            procedure_count += 1
+                    except Exception as proc_error:
+                        self.logger.warning(f"Could not retrieve procedure information: {str(proc_error)}")
+                    
+                    # Create and yield the catalog record
+                    record = {
+                        "catalog_name": catalog_name or "default",
+                        "schema_count": schema_count,
+                        "table_count": table_count,
+                        "view_count": view_count,
+                        "procedure_count": procedure_count,
+                        "function_count": procedure_count,  # Functions often same as procedures in ODBC
+                        "remarks": f"Catalog information for {catalog_name or 'default'}",
+                    }
+                    yield record
                     
         except Exception as e:
-            self.logger.error(f"Error reading database metadata: {str(e)}")
+            self.logger.error(f"Error reading database catalog metadata: {str(e)}")
             raise e
