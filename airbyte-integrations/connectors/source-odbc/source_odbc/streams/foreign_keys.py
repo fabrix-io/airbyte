@@ -12,26 +12,27 @@ class ForeignKeysStream(OdbcStream):
     
     @property
     def primary_key(self) -> Optional[str]:
-        return "constraint_object_id"
+        return ["pk_table_catalog", "pk_table_schema", "pk_table_name", "fk_table_catalog", "fk_table_schema", "fk_table_name", "key_seq"]
 
     def get_json_schema(self) -> Mapping[str, Any]:
         return {
             "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
             "properties": {
-                "constraint_object_id": {"type": "integer", "description": "Foreign key constraint object ID"},
-                "constraint_name": {"type": "string", "description": "Foreign key constraint name"},
-                "parent_schema": {"type": "string", "description": "Parent table schema"},
-                "parent_table": {"type": "string", "description": "Parent table name"},
-                "parent_columns": {"type": "array", "items": {"type": "string"}, "description": "Parent table columns"},
-                "referenced_schema": {"type": "string", "description": "Referenced table schema"},
-                "referenced_table": {"type": "string", "description": "Referenced table name"},
-                "referenced_columns": {"type": "array", "items": {"type": "string"}, "description": "Referenced table columns"},
-                "update_referential_action": {"type": "string", "description": "ON UPDATE action"},
-                "delete_referential_action": {"type": "string", "description": "ON DELETE action"},
-                "is_disabled": {"type": "boolean", "description": "Is constraint disabled"},
-                "is_not_for_replication": {"type": "boolean", "description": "Not for replication"},
-                "is_not_trusted": {"type": "boolean", "description": "Is not trusted"},
+                "pk_table_catalog": {"type": ["string", "null"], "description": "Primary key table catalog"},
+                "pk_table_schema": {"type": "string", "description": "Primary key table schema"},
+                "pk_table_name": {"type": "string", "description": "Primary key table name"},
+                "pk_column_name": {"type": "string", "description": "Primary key column name"},
+                "fk_table_catalog": {"type": ["string", "null"], "description": "Foreign key table catalog"},
+                "fk_table_schema": {"type": "string", "description": "Foreign key table schema"},
+                "fk_table_name": {"type": "string", "description": "Foreign key table name"},
+                "fk_column_name": {"type": "string", "description": "Foreign key column name"},
+                "key_seq": {"type": "integer", "description": "Sequence number of column in multi-column foreign key"},
+                "update_rule": {"type": ["integer", "null"], "description": "Action for UPDATE rule"},
+                "delete_rule": {"type": ["integer", "null"], "description": "Action for DELETE rule"},
+                "fk_name": {"type": ["string", "null"], "description": "Foreign key constraint name"},
+                "pk_name": {"type": ["string", "null"], "description": "Primary key constraint name"},
+                "deferrability": {"type": ["integer", "null"], "description": "Deferrability of the foreign key"},
             }
         }
     
@@ -42,73 +43,56 @@ class ForeignKeysStream(OdbcStream):
         stream_slice: Optional[Mapping[str, Any]] = None,
         stream_state: Optional[Mapping[str, Any]] = None,
     ) -> Iterable[Mapping[str, Any]]:
-        """Read all foreign key constraints."""
+        """Read all foreign key constraints using ODBC catalog functions."""
         
         try:
             with self._get_odbc_connection() as conn:
                 with conn.cursor() as cursor:
-                    # Get foreign key basic info
-                    fk_query = """
-            SELECT DISTINCT
-                fk.object_id as constraint_object_id,
-                fk.name as constraint_name,
-                ps.name as parent_schema,
-                pt.name as parent_table,
-                rs.name as referenced_schema,
-                rt.name as referenced_table,
-                fk.update_referential_action_desc as update_referential_action,
-                fk.delete_referential_action_desc as delete_referential_action,
-                fk.is_disabled,
-                fk.is_not_for_replication,
-                fk.is_not_trusted
-            FROM sys.foreign_keys fk
-            INNER JOIN sys.tables pt ON fk.parent_object_id = pt.object_id
-            INNER JOIN sys.schemas ps ON pt.schema_id = ps.schema_id
-            INNER JOIN sys.tables rt ON fk.referenced_object_id = rt.object_id
-            INNER JOIN sys.schemas rs ON rt.schema_id = rs.schema_id
-            WHERE pt.is_ms_shipped = 0
-                    ORDER BY ps.name, pt.name, fk.name
-                    """
+                    # First get all tables using the same approach as other streams
+                    tables = []
+                    for table_row in cursor.tables():
+                        table_type = getattr(table_row, 'table_type', '')
+                        if table_type in ('TABLE', 'BASE TABLE'):  # Only user tables for FKs
+                            tables.append({
+                                'catalog': getattr(table_row, 'table_cat', ''),
+                                'schema': getattr(table_row, 'table_schem', ''),
+                                'name': getattr(table_row, 'table_name', '')
+                            })
                     
-                    cursor.execute(fk_query)
-                    foreign_keys = cursor.fetchall()
-                    
-                    # Get column mappings for each foreign key
-                    for fk_row in foreign_keys:
-                        # Get column mappings
-                        columns_query = """
-                        SELECT 
-                            pc.name as parent_column,
-                            rc.name as referenced_column
-                        FROM sys.foreign_key_columns fkc
-                        INNER JOIN sys.columns pc ON fkc.parent_object_id = pc.object_id AND fkc.parent_column_id = pc.column_id
-                        INNER JOIN sys.columns rc ON fkc.referenced_object_id = rc.object_id AND fkc.referenced_column_id = rc.column_id
-                        WHERE fkc.constraint_object_id = ?
-                        ORDER BY fkc.constraint_column_id
-                        """
-                        
-                        cursor.execute(columns_query, fk_row.constraint_object_id)
-                        column_mappings = cursor.fetchall()
-                        
-                        parent_columns = [mapping.parent_column for mapping in column_mappings]
-                        referenced_columns = [mapping.referenced_column for mapping in column_mappings]
-                        
-                        record = {
-                            "constraint_object_id": fk_row.constraint_object_id,
-                            "constraint_name": fk_row.constraint_name,
-                            "parent_schema": fk_row.parent_schema,
-                            "parent_table": fk_row.parent_table,
-                            "parent_columns": parent_columns,
-                            "referenced_schema": fk_row.referenced_schema,
-                            "referenced_table": fk_row.referenced_table,
-                            "referenced_columns": referenced_columns,
-                            "update_referential_action": fk_row.update_referential_action,
-                            "delete_referential_action": fk_row.delete_referential_action,
-                            "is_disabled": bool(fk_row.is_disabled),
-                            "is_not_for_replication": bool(fk_row.is_not_for_replication),
-                            "is_not_trusted": bool(fk_row.is_not_trusted),
-                        }
-                        yield record
+                    # Now get foreign keys for each table
+                    for table in tables:
+                        try:
+                            catalog = table['catalog']
+                            schema = table['schema']
+                            table_name = table['name']
+                            
+                            # Query foreign keys where this table is the foreign key table
+                            for row in cursor.foreignKeys(
+                                foreignCatalog=catalog,     # This specific table's catalog
+                                foreignSchema=schema,       # This specific table's schema
+                                foreignTable=table_name     # This specific table
+                            ):
+                                record = {
+                                    "pk_table_catalog": getattr(row, 'pktable_cat', None),
+                                    "pk_table_schema": getattr(row, 'pktable_schem', None),
+                                    "pk_table_name": getattr(row, 'pktable_name', None),
+                                    "pk_column_name": getattr(row, 'pkcolumn_name', None),
+                                    "fk_table_catalog": getattr(row, 'fktable_cat', None),
+                                    "fk_table_schema": getattr(row, 'fktable_schem', None),
+                                    "fk_table_name": getattr(row, 'fktable_name', None),
+                                    "fk_column_name": getattr(row, 'fkcolumn_name', None),
+                                    "key_seq": getattr(row, 'key_seq', None),
+                                    "update_rule": getattr(row, 'update_rule', None),
+                                    "delete_rule": getattr(row, 'delete_rule', None),
+                                    "fk_name": getattr(row, 'fk_name', None),
+                                    "pk_name": getattr(row, 'pk_name', None),
+                                    "deferrability": getattr(row, 'deferrability', None),
+                                }
+                                yield record
+                        except Exception as table_error:
+                            # Log error for this specific table but continue with others
+                            self.logger.warning(f"Could not get foreign keys for table {schema}.{table_name}: {str(table_error)}")
+                            continue
                     
         except Exception as e:
             self.logger.error(f"Error reading foreign keys: {str(e)}")
