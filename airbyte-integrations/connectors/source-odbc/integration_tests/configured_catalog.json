@@ -77,7 +77,7 @@
             "column_name": {"type": "string", "description": "Column name"},
             "ordinal_position": {"type": ["integer"], "description": "Column position in table"},
             "column_default": {"type": "string", "description": "Default value"},
-            "is_nullable": {"type": "string", "description": "YES if nullable, NO if not"},
+            "is_nullable": {"type": "boolean", "description": "True if nullable, False if not"},
             "data_type": {"type": "string", "description": "Data type name"},
             "character_maximum_length": {"type": ["integer"], "description": "Maximum character length"},
             "numeric_precision": {"type": ["integer"], "description": "Numeric precision"},
