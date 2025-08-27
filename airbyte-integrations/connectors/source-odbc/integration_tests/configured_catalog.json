@@ -34,14 +34,15 @@
           "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
-            "schema_id": {"type": "integer", "description": "Schema ID"},
-            "schema_name": {"type": "string", "description": "Schema name"},
-            "principal_id": {"type": ["integer", "null"], "description": "Schema owner principal ID"},
-            "principal_name": {"type": ["string", "null"], "description": "Schema owner name"}
+            "table_catalog": {"type": ["string", "null"], "description": "Database catalog name"},
+            "table_schema": {"type": "string", "description": "Schema name"},
+            "table_name": {"type": ["string", "null"], "description": "Table name (null for schema info)"},
+            "table_type": {"type": ["string", "null"], "description": "Table type"},
+            "remarks": {"type": ["string", "null"], "description": "Schema remarks/description"}
           }
         },
         "supported_sync_modes": ["full_refresh"],
-        "source_defined_primary_key": [["schema_id"]],
+        "source_defined_primary_key": [["table_schema"]],
         "is_resumable": false
       },
       "sync_mode": "full_refresh",

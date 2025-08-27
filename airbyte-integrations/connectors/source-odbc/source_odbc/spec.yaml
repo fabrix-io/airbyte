@@ -4,10 +4,12 @@ connectionSpecification:
   title: ODBC Connection Specification
   type: object
   required:
-    - username
-    - password
     - server
     - database
+    - database_type
+    - username
+    - password
+    - authentication_type
   properties:
     server:
       type: string
@@ -67,7 +69,7 @@ connectionSpecification:
         - "ActiveDirectoryIntegrated"
         - "ActiveDirectoryPassword"
         - "ActiveDirectoryKerberos"
-      order: 8
+      order: 7
     # Kerberos-specific configuration
     realm:
       type: string
@@ -76,7 +78,7 @@ connectionSpecification:
       examples:
         - "FABRIX.LOCAL"
         - "COMPANY.COM"
-      order: 9
+      order: 8
     kdc_host:
       type: string
       title: KDC Host
@@ -84,10 +86,10 @@ connectionSpecification:
       examples:
         - "dc01.company.com"
         - "192.168.1.10"
-      order: 10
+      order: 9
     connection_timeout:
       type: integer
       title: Connection Timeout
       description: Connection timeout in seconds
       default: 30
-      order: 11
+      order: 10

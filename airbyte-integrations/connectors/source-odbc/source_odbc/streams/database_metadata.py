@@ -12,7 +12,7 @@ class DatabaseMetadataStream(OdbcStream):
     
     @property
     def primary_key(self) -> Optional[str]:
-        return "database_name"
+        return "database_id"
 
     def get_json_schema(self) -> Mapping[str, Any]:
         return {

@@ -33,8 +33,6 @@ class SourceOdbc(AbstractSource):
             return False, f"Error connecting to ODBC server: {str(e)}"
 
     def streams(self, config: Mapping[str, Any]) -> list[Stream]:
-        """Return all available streams."""
-        
         streams = [
             DatabaseMetadataStream(config=config),
             SchemasStream(config=config),
