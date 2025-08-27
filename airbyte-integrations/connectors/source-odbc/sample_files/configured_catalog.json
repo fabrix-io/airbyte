@@ -2,29 +2,6 @@
   "streams": [
     {
       "stream": {
-        "name": "hello_world",
-        "json_schema": {
-          "$schema": "http://json-schema.org/draft-07/schema#",
-          "type": "object",
-          "properties": {
-            "id": {"type": "integer", "description": "Unique identifier"},
-            "username": {"type": ["string", "null"], "description": "Current database user"},
-            "system_user": {"type": ["string", "null"], "description": "System user identity"},
-            "message": {"type": "string", "description": "Hello message for the user"},
-            "timestamp": {"type": ["string", "null"], "description": "Current timestamp from database"},
-            "database_name": {"type": ["string", "null"], "description": "Name of the connected database"},
-            "server_name": {"type": ["string", "null"], "description": "Database server name"},
-            "auth_scheme": {"type": ["string", "null"], "description": "Authentication scheme used"}
-          }
-        },
-        "supported_sync_modes": ["full_refresh"],
-        "source_defined_primary_key": [["id"]]
-      },
-      "sync_mode": "full_refresh",
-      "destination_sync_mode": "overwrite"
-    },
-    {
-      "stream": {
         "name": "database_metadata",
         "json_schema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
@@ -186,6 +163,26 @@
         },
         "supported_sync_modes": ["full_refresh"],
         "source_defined_primary_key": [["constraint_object_id"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "all_table_data",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "source_table_schema": {"type": "string", "description": "Schema name of the source table"},
+            "source_table_name": {"type": "string", "description": "Name of the source table"},
+            "source_table_full_name": {"type": "string", "description": "Full table name (schema.table)"},
+            "record_data": {"type": "object", "description": "The actual record data from the table", "additionalProperties": true},
+            "row_number": {"type": "integer", "description": "Row number within the source table"},
+            "extracted_at": {"type": "string", "format": "date-time", "description": "Timestamp when the record was extracted"}
+          }
+        },
+        "supported_sync_modes": ["full_refresh"]
       },
       "sync_mode": "full_refresh",
       "destination_sync_mode": "overwrite"
