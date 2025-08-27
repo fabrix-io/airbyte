@@ -14,14 +14,13 @@ from impacket.krb5.kerberosv5 import getKerberosTGT
 from impacket.krb5.types import Principal
 
 from .streams import (
-    HelloWorldStream,
     DatabaseMetadataStream,
     SchemasStream,
     TablesStream,
     ColumnsStream,
     IndexesStream,
     ForeignKeysStream,
-    TableDataStream,
+    AllTableDataStream,
 )
 
 
@@ -49,11 +48,9 @@ class SourceOdbc(AbstractSource):
             self._cleanup_temp_files()
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
-        """Return all available streams including dynamic table data streams."""
+        """Return all available streams."""
         
-        # Base metadata streams
-        base_streams = [
-            HelloWorldStream(config=config),
+        streams = [
             DatabaseMetadataStream(config=config),
             SchemasStream(config=config),
             TablesStream(config=config),
@@ -62,47 +59,11 @@ class SourceOdbc(AbstractSource):
             ForeignKeysStream(config=config),
         ]
         
-        # Add dynamic table data streams if enabled
+        # Only include table data stream if configured to do so
         if config.get('include_table_data', True):
-            try:
-                # Get all tables to create dynamic streams
-                tables_stream = TablesStream(config=config)
-                
-                # We need to actually query to get the tables, but this might fail during discovery
-                # So we'll do this in a try-catch and only add table streams if we can connect
-                conn = self._get_odbc_connection(config)
-                cursor = conn.cursor()
-                
-                # Get all user tables
-                tables_query = """
-                SELECT s.name as schema_name, t.name as table_name
-                FROM sys.tables t
-                INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
-                WHERE t.is_ms_shipped = 0
-                ORDER BY s.name, t.name
-                """
-                
-                cursor.execute(tables_query)
-                
-                # Add a stream for each table
-                for row in cursor:
-                    table_stream = TableDataStream(
-                        config=config,
-                        schema_name=row.schema_name,
-                        table_name=row.table_name
-                    )
-                    base_streams.append(table_stream)
-                
-                cursor.close()
-                conn.close()
-                self._cleanup_temp_files()
-                
-            except Exception as e:
-                # If we can't connect or query tables, just return the base streams
-                self.logger.warning(f"Could not discover table data streams: {str(e)}")
-                self._cleanup_temp_files()
+            streams.append(AllTableDataStream(config=config))
         
-        return base_streams
+        return streams
 
     def _cleanup_temp_files(self):
         """Clean up temporary Kerberos files."""
