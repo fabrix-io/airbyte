@@ -96,18 +96,6 @@ connectionSpecification:
         - "dc01.company.com"
         - "192.168.1.10"
       order: 9
-    encrypt:
-      type: boolean
-      title: Encrypt Connection
-      description: Use encrypted connection
-      default: true
-      order: 10
-    trust_server_certificate:
-      type: boolean
-      title: Trust Server Certificate
-      description: Trust the server certificate (use with caution)
-      default: false
-      order: 11
     connection_timeout:
       type: integer
       title: Connection Timeout

@@ -94,4 +94,3 @@ docker build -t airbyte/source-odbc:dev .
 ### 0.1.0
 - Initial release with Active Directory authentication support
 - Basic ODBC connectivity
-- Hello World test stream

@@ -155,8 +155,6 @@ class SourceOdbc(AbstractSource):
         port = config.get('port', 1433)
         driver = config.get('driver', 'ODBC Driver 18 for SQL Server')
         auth_type = config.get('authentication_type', 'ActiveDirectory')
-        encrypt = config.get('encrypt', True)
-        trust_cert = config.get('trust_server_certificate', False)
         timeout = config.get('connection_timeout', 30)
         
         # Kerberos-specific parameters
@@ -183,6 +181,7 @@ class SourceOdbc(AbstractSource):
 
         # Build connection string
         if dsn and not dsn.startswith('DRIVER='):
+            #TODO: Remove this
             # Using a pre-configured DSN
             conn_str = f"DSN={dsn};UID={username};PWD={password}"
         else:
@@ -201,7 +200,7 @@ class SourceOdbc(AbstractSource):
                 ])
             
             # Add authentication based on type
-            if auth_type == "ActiveDirectory":
+            if auth_type in ("ActiveDirectory", "ActiveDirectoryPassword"):
                 conn_str_parts.extend([
                     f"UID={username}",
                     f"PWD={password}",
@@ -210,12 +209,6 @@ class SourceOdbc(AbstractSource):
             elif auth_type == "ActiveDirectoryIntegrated" or auth_type == "ActiveDirectoryKerberos":
                 # For Kerberos, we use Trusted_Connection which relies on the Kerberos ticket
                 conn_str_parts.append("Trusted_Connection=Yes")
-            elif auth_type == "ActiveDirectoryPassword":
-                conn_str_parts.extend([
-                    f"UID={username}",
-                    f"PWD={password}",
-                    "Authentication=ActiveDirectoryPassword"
-                ])
             else:  # SqlServerAuthentication
                 conn_str_parts.extend([
                     f"UID={username}",
@@ -223,11 +216,9 @@ class SourceOdbc(AbstractSource):
                 ])
             
             # Add security settings
-            if encrypt:
-                conn_str_parts.append("Encrypt=yes")
-            
-            if trust_cert:
-                conn_str_parts.append("TrustServerCertificate=yes")
+            conn_str_parts.append("Encrypt=yes")
+
+            conn_str_parts.append("TrustServerCertificate=yes")
             
             conn_str = ';'.join(conn_str_parts)
 
