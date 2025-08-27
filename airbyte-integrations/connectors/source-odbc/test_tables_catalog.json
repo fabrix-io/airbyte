@@ -7,23 +7,15 @@
           "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
-            "object_id": {"type": "integer"},
-            "schema_name": {"type": "string"},
-            "table_name": {"type": "string"},
-            "full_table_name": {"type": "string"},
-            "table_type": {"type": "string"},
-            "create_date": {"type": ["string", "null"]},
-            "modify_date": {"type": ["string", "null"]},
-            "row_count": {"type": ["integer", "null"]},
-            "has_clustered_index": {"type": "boolean"},
-            "has_primary_key": {"type": "boolean"},
-            "is_replicated": {"type": "boolean"},
-            "is_published": {"type": "boolean"},
-            "data_compression_desc": {"type": ["string", "null"]}
+            "table_catalog": {"type": ["string", "null"], "description": "Database catalog name"},
+            "table_schema": {"type": "string", "description": "Schema name"},
+            "table_name": {"type": "string", "description": "Table name"},
+            "table_type": {"type": "string", "description": "Table type (BASE TABLE, VIEW, etc.)"},
+            "remarks": {"type": ["string", "null"], "description": "Table remarks/description"}
           }
         },
         "supported_sync_modes": ["full_refresh"],
-        "source_defined_primary_key": [["object_id"]]
+        "source_defined_primary_key": [["table_catalog"], ["table_schema"], ["table_name"]]
       },
       "sync_mode": "full_refresh",
       "destination_sync_mode": "overwrite"

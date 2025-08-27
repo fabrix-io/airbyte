@@ -55,23 +55,15 @@
           "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
-            "object_id": {"type": "integer", "description": "Table object ID"},
-            "schema_name": {"type": "string", "description": "Schema name"},
+            "table_catalog": {"type": ["string", "null"], "description": "Database catalog name"},
+            "table_schema": {"type": "string", "description": "Schema name"},
             "table_name": {"type": "string", "description": "Table name"},
-            "full_table_name": {"type": "string", "description": "Schema.Table name"},
             "table_type": {"type": "string", "description": "Table type (BASE TABLE, VIEW, etc.)"},
-            "create_date": {"type": ["string", "null"], "description": "Table creation date"},
-            "modify_date": {"type": ["string", "null"], "description": "Table last modification date"},
-            "row_count": {"type": ["integer", "null"], "description": "Approximate row count"},
-            "has_clustered_index": {"type": "boolean", "description": "Has clustered index"},
-            "has_primary_key": {"type": "boolean", "description": "Has primary key"},
-            "is_replicated": {"type": "boolean", "description": "Is replicated"},
-            "is_published": {"type": "boolean", "description": "Is published for replication"},
-            "data_compression_desc": {"type": ["string", "null"], "description": "Data compression type"}
+            "remarks": {"type": ["string", "null"], "description": "Table remarks/description"}
           }
         },
         "supported_sync_modes": ["full_refresh"],
-        "source_defined_primary_key": [["object_id"]],
+        "source_defined_primary_key": [["table_catalog"], ["table_schema"], ["table_name"]],
         "is_resumable": false
       },
       "sync_mode": "full_refresh",
