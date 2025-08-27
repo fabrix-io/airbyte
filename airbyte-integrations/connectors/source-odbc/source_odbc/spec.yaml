@@ -36,7 +36,7 @@ connectionSpecification:
     username:
       type: string
       title: Username
-      description: The username for Active Directory authentication
+      description: The username for authentication
       examples:
         - "domain\\user"
         - "user@domain.com"
@@ -44,7 +44,7 @@ connectionSpecification:
     password:
       type: string
       title: Password
-      description: The password for Active Directory authentication
+      description: The password for authentication
       airbyte_secret: true
       order: 5
     port:
