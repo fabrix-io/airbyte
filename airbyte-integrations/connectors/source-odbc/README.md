@@ -18,13 +18,11 @@ This is the repository for the ODBC source connector, which connects to ODBC-com
 
 | Field | Type | Required | Description | Example |
 |-------|------|----------|-------------|---------|
-| `dsn` | string | Yes | Data Source Name or connection string | `"DRIVER={ODBC Driver 18 for SQL Server};SERVER=myserver;DATABASE=mydatabase;"` |
 | `server` | string | Yes | Server hostname or IP address | `"sqlserver.domain.com"` |
 | `database` | string | Yes | Database name | `"MyDatabase"` |
 | `username` | string | Yes | Username for authentication | `"domain\\user"` or `"user@domain.com"` |
 | `password` | string | Yes | Password for authentication | `"password123"` |
 | `port` | integer | No | Port number (default: 1433) | `1433` |
-| `driver` | string | No | ODBC driver name | `"ODBC Driver 18 for SQL Server"` |
 | `authentication_type` | string | No | Authentication method | `"ActiveDirectoryKerberos"` |
 | `realm` | string | No* | Kerberos realm (required for Kerberos auth) | `"DOMAIN.COM"` |
 | `kdc_host` | string | No* | Key Distribution Center host (required for Kerberos auth) | `"dc01.domain.com"` |

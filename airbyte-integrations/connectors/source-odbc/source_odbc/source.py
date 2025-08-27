@@ -143,17 +143,65 @@ class SourceOdbc(AbstractSource):
         
         return ccache_path
 
-    def _get_odbc_connection(self, config: Mapping[str, Any]) -> Any:
-        """Create an ODBC connection with Active Directory authentication."""
+    def _get_database_drivers(self, database_type: str) -> List[str]:
+        """Get list of preferred drivers for a database type, in order of preference."""
+        driver_preferences = {
+            "SqlServer": [
+                "ODBC Driver 18 for SQL Server",
+                "ODBC Driver 17 for SQL Server", 
+                "ODBC Driver 13 for SQL Server",
+                "ODBC Driver 11 for SQL Server",
+                "SQL Server Native Client 11.0",
+                "SQL Server Native Client 10.0",
+                "FreeTDS",  # Open-source driver, available on more architectures
+                "SQL Server"
+            ],
+            # Future database types can be added here:
+            # "Oracle": [
+            #     "Oracle in OraClient19Home1",
+            #     "Oracle in OraClient18Home1", 
+            #     "Oracle in OraClient12Home1",
+            #     "Oracle ODBC Driver"
+            # ],
+            # "PostgreSQL": [
+            #     "PostgreSQL Unicode",
+            #     "PostgreSQL ANSI"
+            # ],
+            # "MySQL": [
+            #     "MySQL ODBC 8.0 Unicode Driver",
+            #     "MySQL ODBC 8.0 ANSI Driver",
+            #     "MySQL ODBC 5.3 Unicode Driver",
+            #     "MySQL ODBC 5.3 ANSI Driver"
+            # ]
+        }
         
-        # Extract configuration parameters
-        dsn = config.get('dsn', '')
+        return driver_preferences.get(database_type, [])
+
+    def _auto_detect_driver(self, database_type: str, available_drivers: List[str]) -> str:
+        preferred_drivers = self._get_database_drivers(database_type)
+        
+        # Try each preferred driver in order
+        for driver in preferred_drivers:
+            if driver in available_drivers:
+                return driver
+        
+        # If no preferred driver found, raise an error with helpful info
+        raise ValueError(
+            f"No compatible ODBC driver found for {database_type}. "
+            f"Preferred drivers: {preferred_drivers}. "
+            f"Available drivers: {available_drivers}. "
+            f"Please install a compatible ODBC driver."
+        )
+
+    def _get_odbc_connection(self, config: Mapping[str, Any]) -> Any:
+        """Create an ODBC connection with database-specific driver auto-detection."""
+        
         server = config['server']
         database = config['database']
+        database_type = config.get('database_type', 'SqlServer')
         username = config['username']
         password = config['password']
         port = config.get('port', 1433)
-        driver = config.get('driver', 'ODBC Driver 18 for SQL Server')
         auth_type = config.get('authentication_type', 'ActiveDirectory')
         timeout = config.get('connection_timeout', 30)
         
@@ -170,63 +218,76 @@ class SourceOdbc(AbstractSource):
             krb5_path, ccache_path = self._setup_kerberos_config(realm, kdc_host)
             actual_ccache = self._authenticate_with_kerberos(username, password, realm, kdc_host)
 
-        # Find available SQL Server driver
-        if auth_type in ["ActiveDirectoryKerberos", "ActiveDirectoryIntegrated"] and not driver:
-            available_drivers = pyodbc.drivers()
-            driver = next((d for d in ("ODBC Driver 18 for SQL Server",
-                                     "ODBC Driver 17 for SQL Server", 
-                                     "SQL Server") if d in available_drivers), None)
-            if not driver:
-                raise ValueError(f"No SQL Server ODBC driver found. Available: {list(available_drivers)}")
+        # Get available drivers
+        available_drivers = pyodbc.drivers()
+        
+        # Auto-detect driver if not specified
+        driver = self._auto_detect_driver(database_type, available_drivers)
 
-        # Build connection string
-        if dsn and not dsn.startswith('DRIVER='):
-            #TODO: Remove this
-            # Using a pre-configured DSN
-            conn_str = f"DSN={dsn};UID={username};PWD={password}"
-        else:
-            # Build full connection string
-            conn_str_parts = []
-            
-            if dsn and dsn.startswith('DRIVER='):
-                # Use provided connection string as base
-                conn_str_parts.append(dsn)
-            else:
-                # Build from individual components
-                conn_str_parts.extend([
-                    f"DRIVER={{{driver}}}",
+        if hasattr(self, 'logger') and self.logger:
+            self.logger.info(f"Using ODBC driver: {driver}")
+
+        # Try multiple drivers if the first one fails
+        drivers_to_try = [driver]
+        if driver != self._get_database_drivers(database_type)[0]:
+            # Add other preferred drivers as fallbacks
+            other_drivers = [d for d in self._get_database_drivers(database_type) 
+                           if d != driver and d in available_drivers]
+            drivers_to_try.extend(other_drivers)
+
+        last_error = None
+        
+        for current_driver in drivers_to_try:
+            try:
+                # Build connection string for this driver
+                conn_str_parts = [
+                    f"DRIVER={{{current_driver}}}",
                     f"SERVER={server},{port}" if port != 1433 else f"SERVER={server}",
                     f"DATABASE={database}",
-                ])
-            
-            # Add authentication based on type
-            if auth_type in ("ActiveDirectory", "ActiveDirectoryPassword"):
-                conn_str_parts.extend([
-                    f"UID={username}",
-                    f"PWD={password}",
-                    "Authentication=ActiveDirectoryPassword"
-                ])
-            elif auth_type == "ActiveDirectoryIntegrated" or auth_type == "ActiveDirectoryKerberos":
-                # For Kerberos, we use Trusted_Connection which relies on the Kerberos ticket
-                conn_str_parts.append("Trusted_Connection=Yes")
-            else:  # SqlServerAuthentication
-                conn_str_parts.extend([
-                    f"UID={username}",
-                    f"PWD={password}"
-                ])
-            
-            # Add security settings
-            conn_str_parts.append("Encrypt=yes")
+                ]
+                
+                # Add authentication based on type
+                if auth_type in ("ActiveDirectory", "ActiveDirectoryPassword"):
+                    conn_str_parts.extend([
+                        f"UID={username}",
+                        f"PWD={password}",
+                        "Authentication=ActiveDirectoryPassword"
+                    ])
+                elif auth_type == "ActiveDirectoryIntegrated" or auth_type == "ActiveDirectoryKerberos":
+                    # For Kerberos, we use Trusted_Connection which relies on the Kerberos ticket
+                    conn_str_parts.append("Trusted_Connection=Yes")
+                else:  # SqlServerAuthentication
+                    conn_str_parts.extend([
+                        f"UID={username}",
+                        f"PWD={password}"
+                    ])
+                
+                # Add security settings
+                conn_str_parts.append("Encrypt=yes")
+                conn_str_parts.append("TrustServerCertificate=yes")
+                
+                conn_str = ';'.join(conn_str_parts)
 
-            conn_str_parts.append("TrustServerCertificate=yes")
-            
-            conn_str = ';'.join(conn_str_parts)
-
-        # Create connection
-        connection = pyodbc.connect(
-            conn_str,
-            timeout=timeout,
-            autocommit=True
-        )
+                # Try to connect with this driver
+                if hasattr(self, 'logger') and self.logger:
+                    self.logger.info(f"Attempting connection with driver: {current_driver}")
+                connection = pyodbc.connect(
+                    conn_str,
+                    timeout=timeout,
+                    autocommit=True
+                )
+                
+                if hasattr(self, 'logger') and self.logger:
+                    self.logger.info(f"Successfully connected using driver: {current_driver}")
+                return connection
+                
+            except Exception as e:
+                last_error = e
+                continue
         
-        return connection
+        # If we get here, all drivers failed
+        raise Exception(
+            f"Failed to connect with any available driver for {database_type}. "
+            f"Tried drivers: {drivers_to_try}. "
+            f"Last error: {str(last_error)}"
+        )

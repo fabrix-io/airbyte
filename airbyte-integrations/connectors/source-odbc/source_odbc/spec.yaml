@@ -4,20 +4,11 @@ connectionSpecification:
   title: ODBC Connection Specification
   type: object
   required:
-    - dsn
     - username
     - password
     - server
     - database
   properties:
-    dsn:
-      type: string
-      title: Data Source Name (DSN)
-      description: The ODBC Data Source Name or connection string
-      examples:
-        - "DRIVER={ODBC Driver 18 for SQL Server};SERVER=myserver;DATABASE=mydatabase;Trusted_Connection=yes;"
-        - "MyDSN"
-      order: 0
     server:
       type: string
       title: Server
@@ -34,6 +25,14 @@ connectionSpecification:
         - "MyDatabase"
         - "AdventureWorks"
       order: 2
+    database_type:
+      type: string
+      title: Database Type
+      description: The type of database system
+      default: "SqlServer"
+      enum:
+        - "SqlServer"
+      order: 3
     username:
       type: string
       title: Username
@@ -41,31 +40,21 @@ connectionSpecification:
       examples:
         - "domain\\user"
         - "user@domain.com"
-      order: 3
+      order: 4
     password:
       type: string
       title: Password
       description: The password for Active Directory authentication
       airbyte_secret: true
-      order: 4
+      order: 5
     port:
       type: integer
       title: Port
-      description: "The port number (default: 1433 for SQL Server)"
+      description: "The port number (default: varies by database type)"
       default: 1433
       examples:
         - 1433
         - 1521
-      order: 5
-    driver:
-      type: string
-      title: ODBC Driver
-      description: The ODBC driver name to use
-      default: "ODBC Driver 18 for SQL Server"
-      examples:
-        - "ODBC Driver 18 for SQL Server"
-        - "ODBC Driver 17 for SQL Server"
-        - "Oracle in OraClient19Home1"
       order: 6
     authentication_type:
       type: string
@@ -78,7 +67,7 @@ connectionSpecification:
         - "ActiveDirectoryIntegrated"
         - "ActiveDirectoryPassword"
         - "ActiveDirectoryKerberos"
-      order: 7
+      order: 8
     # Kerberos-specific configuration
     realm:
       type: string
@@ -87,7 +76,7 @@ connectionSpecification:
       examples:
         - "FABRIX.LOCAL"
         - "COMPANY.COM"
-      order: 8
+      order: 9
     kdc_host:
       type: string
       title: KDC Host
@@ -95,10 +84,10 @@ connectionSpecification:
       examples:
         - "dc01.company.com"
         - "192.168.1.10"
-      order: 9
+      order: 10
     connection_timeout:
       type: integer
       title: Connection Timeout
       description: Connection timeout in seconds
       default: 30
-      order: 12
+      order: 11

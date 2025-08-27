@@ -32,13 +32,11 @@ Based on your working code sample, here's the equivalent configuration for the O
 
 ```json
 {
-  "dsn": "DRIVER={ODBC Driver 18 for SQL Server};SERVER=ec2-3-88-19-18.compute-1.amazonaws.com,1433;DATABASE=FabrixHR;Trusted_Connection=Yes;Encrypt=Yes;TrustServerCertificate=Yes;",
   "server": "ec2-3-88-19-18.compute-1.amazonaws.com",
   "database": "FabrixHR", 
   "username": "FABRIXSCANNER",
   "password": "Password1!",
   "port": 1433,
-  "driver": "ODBC Driver 18 for SQL Server",
   "authentication_type": "ActiveDirectoryKerberos",
   "realm": "FABRIX.LOCAL",
   "kdc_host": "ec2-3-88-19-18.compute-1.amazonaws.com",
