@@ -12,6 +12,7 @@ from impacket.krb5.ccache import CCache
 from impacket.krb5.kerberosv5 import getKerberosTGT
 from impacket.krb5.types import Principal
 
+from .database_types import DatabaseType
 from .odbc_connection import OdbcConnection
 
 
@@ -91,9 +92,9 @@ class OdbcConnectionManager:
         return ccache_path
 
     @staticmethod
-    def get_database_drivers(database_type: str) -> List[str]:
+    def get_database_drivers(database_type: DatabaseType) -> List[str]:
         driver_preferences = {
-            "SqlServer": [
+            DatabaseType.SQL_SERVER: [
                 "ODBC Driver 18 for SQL Server",
                 "ODBC Driver 17 for SQL Server", 
                 "ODBC Driver 13 for SQL Server",
@@ -103,20 +104,20 @@ class OdbcConnectionManager:
                 "FreeTDS",  # Open-source driver, available on more architectures
                 "SQL Server"
             ],
-            "PostgreSQL": [
+            DatabaseType.POSTGRESQL: [
                 "PostgreSQL Unicode",
                 "PostgreSQL ANSI",
                 "PostgreSQL Unicode(x64)",
                 "PostgreSQL ANSI(x64)"
             ],
             # Future database types can be added here:
-            # "Oracle": [
+            # DatabaseType.ORACLE: [
             #     "Oracle in OraClient19Home1",
             #     "Oracle in OraClient18Home1", 
             #     "Oracle in OraClient12Home1",
             #     "Oracle ODBC Driver"
             # ],
-            # "MySQL": [
+            # DatabaseType.MYSQL: [
             #     "MySQL ODBC 8.0 Unicode Driver",
             #     "MySQL ODBC 8.0 ANSI Driver",
             #     "MySQL ODBC 5.3 Unicode Driver",
@@ -127,7 +128,7 @@ class OdbcConnectionManager:
         return driver_preferences.get(database_type, [])
 
     @staticmethod
-    def auto_detect_driver(database_type: str, available_drivers: List[str]) -> str:
+    def auto_detect_driver(database_type: DatabaseType, available_drivers: List[str]) -> str:
         """Auto-detect the best available driver for the database type."""
         preferred_drivers = OdbcConnectionManager.get_database_drivers(database_type)
         
@@ -138,7 +139,7 @@ class OdbcConnectionManager:
         
         # If no preferred driver found, raise an error with helpful info
         raise ValueError(
-            f"No compatible ODBC driver found for {database_type}. "
+            f"No compatible ODBC driver found for {database_type.value}. "
             f"Preferred drivers: {preferred_drivers}. "
             f"Available drivers: {available_drivers}. "
             f"Please install a compatible ODBC driver."
@@ -149,19 +150,15 @@ class OdbcConnectionManager:
         
         server = config['server']
         database = config['database']
-        database_type = config.get('database_type', 'SqlServer')
+        database_type = DatabaseType.from_string(config['database_type'])
         username = config['username']
         password = config['password']
         
         # Set default port based on database type
-        default_port = 5432 if database_type == 'PostgreSQL' else 1433
-        port = config.get('port', default_port)
+        port = config.get('port', database_type.get_default_port())
         
         # Set default authentication type based on database type
-        if database_type == 'PostgreSQL':
-            auth_type = config.get('authentication_type', 'SqlServerAuthentication')  # Use basic auth for PostgreSQL
-        else:
-            auth_type = config.get('authentication_type', 'ActiveDirectory')
+        auth_type = config.get('authentication_type', database_type.get_default_auth_type())
         
         timeout = config.get('connection_timeout', 30)
         
@@ -173,8 +170,7 @@ class OdbcConnectionManager:
         connection_temp_files = []
 
         try:
-            # Setup Kerberos authentication if required (only for SQL Server with Kerberos)
-            if database_type == "SqlServer" and auth_type == "ActiveDirectoryKerberos":
+            if auth_type == "ActiveDirectoryKerberos":
                 if not realm or not kdc_host:
                     raise ValueError("realm and kdc_host are required for ActiveDirectoryKerberos authentication")
                 
@@ -203,7 +199,7 @@ class OdbcConnectionManager:
                     # Build connection string for this driver
                     conn_str_parts = []
                     
-                    if database_type == "PostgreSQL":
+                    if database_type == DatabaseType.POSTGRESQL:
                         # PostgreSQL connection string format
                         conn_str_parts = [
                             f"DRIVER={{{current_driver}}}",
@@ -217,7 +213,7 @@ class OdbcConnectionManager:
                         # Add PostgreSQL-specific SSL settings if needed
                         conn_str_parts.append("SSLMode=prefer")
                         
-                    else:  # SqlServer and other databases
+                    else:  # SQL Server and other databases
                         conn_str_parts = [
                             f"DRIVER={{{current_driver}}}",
                             f"SERVER={server},{port}" if port != 1433 else f"SERVER={server}",
@@ -262,7 +258,7 @@ class OdbcConnectionManager:
             
             # If we get here, all drivers failed
             raise Exception(
-                f"Failed to connect with any available driver for {database_type}. "
+                f"Failed to connect with any available driver for {database_type.value}. "
                 f"Tried drivers: {drivers_to_try}. "
                 f"Last error: {str(last_error)}"
             )
