@@ -224,9 +224,6 @@ class SourceOdbc(AbstractSource):
         # Auto-detect driver if not specified
         driver = self._auto_detect_driver(database_type, available_drivers)
 
-        if hasattr(self, 'logger') and self.logger:
-            self.logger.info(f"Using ODBC driver: {driver}")
-
         # Try multiple drivers if the first one fails
         drivers_to_try = [driver]
         if driver != self._get_database_drivers(database_type)[0]:
@@ -269,16 +266,12 @@ class SourceOdbc(AbstractSource):
                 conn_str = ';'.join(conn_str_parts)
 
                 # Try to connect with this driver
-                if hasattr(self, 'logger') and self.logger:
-                    self.logger.info(f"Attempting connection with driver: {current_driver}")
                 connection = pyodbc.connect(
                     conn_str,
                     timeout=timeout,
                     autocommit=True
                 )
                 
-                if hasattr(self, 'logger') and self.logger:
-                    self.logger.info(f"Successfully connected using driver: {current_driver}")
                 return connection
                 
             except Exception as e:
