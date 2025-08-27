@@ -18,11 +18,11 @@ class TablesStream(OdbcStream):
             "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
             "properties": {
-                "table_catalog": {"type": ["string", "null"], "description": "Database catalog name"},
+                "table_catalog": {"type": "string", "description": "Database catalog name"},
                 "table_schema": {"type": "string", "description": "Schema name"},
                 "table_name": {"type": "string", "description": "Table name"},
                 "table_type": {"type": "string", "description": "Table type (BASE TABLE, VIEW, etc.)"},
-                "remarks": {"type": ["string", "null"], "description": "Table remarks/description"},
+                "remarks": {"type": "string", "description": "Table remarks/description"},
             }
         }
     
@@ -36,20 +36,14 @@ class TablesStream(OdbcStream):
         try:
             with self._get_odbc_connection() as conn:
                 with conn.cursor() as cursor:
-                    # Use ODBC catalog function to get table information
-                    # This is more portable than database-specific system tables
                     for row in cursor.tables():
-                        # Filter out system tables and only include user tables and views
-                        table_type = getattr(row, 'table_type', '')
-                        if table_type in ('TABLE', 'BASE TABLE', 'VIEW', 'SYSTEM TABLE'):
-                            record = {
-                                "table_catalog": getattr(row, 'table_cat', None),
-                                "table_schema": getattr(row, 'table_schem', None),
-                                "table_name": getattr(row, 'table_name', None),
-                                "table_type": table_type,
-                                "remarks": getattr(row, 'remarks', None),
-                            }
-                            yield record
+                        yield {
+                            "table_catalog": row.table_cat,
+                            "table_schema": row.table_schem,
+                            "table_name": row.table_name,
+                            "table_type": row.table_type,
+                            "remarks": row.remarks,
+                        }
                     
         except Exception as e:
             self.logger.error(f"Error reading tables: {str(e)}")

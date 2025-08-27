@@ -76,7 +76,7 @@ connectionSpecification:
       title: Kerberos Realm
       description: The Kerberos realm (domain) for Active Directory authentication
       examples:
-        - "FABRIX.LOCAL"
+        - "COMPANY.LOCAL"
         - "COMPANY.COM"
       order: 8
     kdc_host:

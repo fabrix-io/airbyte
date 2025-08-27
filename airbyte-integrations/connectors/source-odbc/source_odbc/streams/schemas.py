@@ -19,11 +19,11 @@ class SchemasStream(OdbcStream):
             "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
             "properties": {
-                "table_catalog": {"type": ["string", "null"], "description": "Database catalog name"},
+                "table_catalog": {"type": "string", "description": "Database catalog name"},
                 "table_schema": {"type": "string", "description": "Schema name"},
-                "table_name": {"type": ["string", "null"], "description": "Table name (null for schema info)"},
-                "table_type": {"type": ["string", "null"], "description": "Table type"},
-                "remarks": {"type": ["string", "null"], "description": "Schema remarks/description"},
+                "table_name": {"type": "string", "description": "Table name (null for schema info)"},
+                "table_type": {"type": "string", "description": "Table type"},
+                "remarks": {"type": "string", "description": "Schema remarks/description"},
             }
         }
     
@@ -43,16 +43,16 @@ class SchemasStream(OdbcStream):
                     
                     for row in cursor.tables():
                         # Extract unique schema names
-                        schema_name = getattr(row, 'table_schem', None)
+                        schema_name = row.table_schem
                         if schema_name and schema_name not in schemas_seen:
                             schemas_seen.add(schema_name)
                             
                             record = {
-                                "table_catalog": getattr(row, 'table_cat', None),
+                                "table_catalog": row.table_cat,
                                 "table_schema": schema_name,
                                 "table_name": None,  # Not applicable for schema info
                                 "table_type": "SCHEMA",
-                                "remarks": getattr(row, 'remarks', None),
+                                "remarks": row.remarks,
                             }
                             yield record
                     
