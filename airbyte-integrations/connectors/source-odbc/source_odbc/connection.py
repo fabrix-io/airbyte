@@ -22,13 +22,6 @@ class OdbcConnectionManager:
         pass  # No longer need to track temp files at manager level
 
     def setup_kerberos_config(self, realm: str, kdc_host: str, temp_files: List[str]) -> Tuple[str, str]:
-        """Setup Kerberos configuration.
-        
-        Args:
-            realm: Kerberos realm
-            kdc_host: KDC host
-            temp_files: List to track temp files for this connection
-        """
         krb5_conf = textwrap.dedent(f"""
         [libdefaults]
           default_realm = {realm}
@@ -67,15 +60,6 @@ class OdbcConnectionManager:
         return krb5_path, ccache_path
 
     def authenticate_with_kerberos(self, username: str, password: str, realm: str, kdc_host: str, temp_files: List[str]) -> str:
-        """Use impacket for pure Python Kerberos authentication.
-        
-        Args:
-            username: Username for authentication
-            password: Password for authentication
-            realm: Kerberos realm
-            kdc_host: KDC host
-            temp_files: List to track temp files for this connection
-        """
         client = Principal(username, type=constants.PrincipalNameType.NT_PRINCIPAL.value)
         
         tgt, cipher, old_session_key, session_key = getKerberosTGT(
@@ -108,7 +92,6 @@ class OdbcConnectionManager:
 
     @staticmethod
     def get_database_drivers(database_type: str) -> List[str]:
-        """Get list of preferred drivers for a database type, in order of preference."""
         driver_preferences = {
             "SqlServer": [
                 "ODBC Driver 18 for SQL Server",
@@ -120,16 +103,18 @@ class OdbcConnectionManager:
                 "FreeTDS",  # Open-source driver, available on more architectures
                 "SQL Server"
             ],
+            "PostgreSQL": [
+                "PostgreSQL Unicode",
+                "PostgreSQL ANSI",
+                "PostgreSQL Unicode(x64)",
+                "PostgreSQL ANSI(x64)"
+            ],
             # Future database types can be added here:
             # "Oracle": [
             #     "Oracle in OraClient19Home1",
             #     "Oracle in OraClient18Home1", 
             #     "Oracle in OraClient12Home1",
             #     "Oracle ODBC Driver"
-            # ],
-            # "PostgreSQL": [
-            #     "PostgreSQL Unicode",
-            #     "PostgreSQL ANSI"
             # ],
             # "MySQL": [
             #     "MySQL ODBC 8.0 Unicode Driver",
@@ -167,8 +152,17 @@ class OdbcConnectionManager:
         database_type = config.get('database_type', 'SqlServer')
         username = config['username']
         password = config['password']
-        port = config.get('port', 1433)
-        auth_type = config.get('authentication_type', 'ActiveDirectory')
+        
+        # Set default port based on database type
+        default_port = 5432 if database_type == 'PostgreSQL' else 1433
+        port = config.get('port', default_port)
+        
+        # Set default authentication type based on database type
+        if database_type == 'PostgreSQL':
+            auth_type = config.get('authentication_type', 'SqlServerAuthentication')  # Use basic auth for PostgreSQL
+        else:
+            auth_type = config.get('authentication_type', 'ActiveDirectory')
+        
         timeout = config.get('connection_timeout', 30)
         
         # Kerberos-specific parameters
@@ -179,8 +173,8 @@ class OdbcConnectionManager:
         connection_temp_files = []
 
         try:
-            # Setup Kerberos authentication if required
-            if auth_type == "ActiveDirectoryKerberos":
+            # Setup Kerberos authentication if required (only for SQL Server with Kerberos)
+            if database_type == "SqlServer" and auth_type == "ActiveDirectoryKerberos":
                 if not realm or not kdc_host:
                     raise ValueError("realm and kdc_host are required for ActiveDirectoryKerberos authentication")
                 
@@ -207,31 +201,48 @@ class OdbcConnectionManager:
             for current_driver in drivers_to_try:
                 try:
                     # Build connection string for this driver
-                    conn_str_parts = [
-                        f"DRIVER={{{current_driver}}}",
-                        f"SERVER={server},{port}" if port != 1433 else f"SERVER={server}",
-                        f"DATABASE={database}",
-                    ]
+                    conn_str_parts = []
                     
-                    # Add authentication based on type
-                    if auth_type in ("ActiveDirectory", "ActiveDirectoryPassword"):
-                        conn_str_parts.extend([
+                    if database_type == "PostgreSQL":
+                        # PostgreSQL connection string format
+                        conn_str_parts = [
+                            f"DRIVER={{{current_driver}}}",
+                            f"SERVER={server}",
+                            f"PORT={port}",
+                            f"DATABASE={database}",
                             f"UID={username}",
                             f"PWD={password}",
-                            "Authentication=ActiveDirectoryPassword"
-                        ])
-                    elif auth_type == "ActiveDirectoryIntegrated" or auth_type == "ActiveDirectoryKerberos":
-                        # For Kerberos, we use Trusted_Connection which relies on the Kerberos ticket
-                        conn_str_parts.append("Trusted_Connection=Yes")
-                    else:  # SqlServerAuthentication
-                        conn_str_parts.extend([
-                            f"UID={username}",
-                            f"PWD={password}"
-                        ])
-                    
-                    # Add security settings
-                    conn_str_parts.append("Encrypt=yes")
-                    conn_str_parts.append("TrustServerCertificate=yes")
+                        ]
+                        
+                        # Add PostgreSQL-specific SSL settings if needed
+                        conn_str_parts.append("SSLMode=prefer")
+                        
+                    else:  # SqlServer and other databases
+                        conn_str_parts = [
+                            f"DRIVER={{{current_driver}}}",
+                            f"SERVER={server},{port}" if port != 1433 else f"SERVER={server}",
+                            f"DATABASE={database}",
+                        ]
+                        
+                        # Add authentication based on type
+                        if auth_type in ("ActiveDirectory", "ActiveDirectoryPassword"):
+                            conn_str_parts.extend([
+                                f"UID={username}",
+                                f"PWD={password}",
+                                "Authentication=ActiveDirectoryPassword"
+                            ])
+                        elif auth_type == "ActiveDirectoryIntegrated" or auth_type == "ActiveDirectoryKerberos":
+                            # For Kerberos, we use Trusted_Connection which relies on the Kerberos ticket
+                            conn_str_parts.append("Trusted_Connection=Yes")
+                        else:  # SqlServerAuthentication
+                            conn_str_parts.extend([
+                                f"UID={username}",
+                                f"PWD={password}"
+                            ])
+                        
+                        # Add security settings for SQL Server
+                        conn_str_parts.append("Encrypt=yes")
+                        conn_str_parts.append("TrustServerCertificate=yes")
                     
                     conn_str = ';'.join(conn_str_parts)
 

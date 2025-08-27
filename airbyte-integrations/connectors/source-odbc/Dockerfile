@@ -23,6 +23,8 @@ RUN apt-get update && \
     (ACCEPT_EULA=Y apt-get install -y msodbcsql13 || true) && \
     # Install FreeTDS as a fallback driver (provides generic "SQL Server" driver)
     apt-get install -y freetds-dev tdsodbc && \
+    # Install PostgreSQL ODBC driver
+    apt-get install -y odbc-postgresql && \
     # Clean up
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
