@@ -57,11 +57,8 @@ class SourceOdbc(AbstractSource):
             ColumnsStream(config=config),
             IndexesStream(config=config),
             ForeignKeysStream(config=config),
+            AllTableDataStream(config=config)
         ]
-        
-        # Only include table data stream if configured to do so
-        if config.get('include_table_data', True):
-            streams.append(AllTableDataStream(config=config))
         
         return streams
 
