@@ -45,11 +45,10 @@ class ForeignKeysStream(OdbcStream):
         """Read all foreign key constraints."""
         
         try:
-            conn = self._get_odbc_connection()
-            cursor = conn.cursor()
-            
-            # Get foreign key basic info
-            fk_query = """
+            with self._get_odbc_connection() as conn:
+                with conn.cursor() as cursor:
+                    # Get foreign key basic info
+                    fk_query = """
             SELECT DISTINCT
                 fk.object_id as constraint_object_id,
                 fk.name as constraint_name,
@@ -68,51 +67,48 @@ class ForeignKeysStream(OdbcStream):
             INNER JOIN sys.tables rt ON fk.referenced_object_id = rt.object_id
             INNER JOIN sys.schemas rs ON rt.schema_id = rs.schema_id
             WHERE pt.is_ms_shipped = 0
-            ORDER BY ps.name, pt.name, fk.name
-            """
-            
-            cursor.execute(fk_query)
-            foreign_keys = cursor.fetchall()
-            
-            # Get column mappings for each foreign key
-            for fk_row in foreign_keys:
-                # Get column mappings
-                columns_query = """
-                SELECT 
-                    pc.name as parent_column,
-                    rc.name as referenced_column
-                FROM sys.foreign_key_columns fkc
-                INNER JOIN sys.columns pc ON fkc.parent_object_id = pc.object_id AND fkc.parent_column_id = pc.column_id
-                INNER JOIN sys.columns rc ON fkc.referenced_object_id = rc.object_id AND fkc.referenced_column_id = rc.column_id
-                WHERE fkc.constraint_object_id = ?
-                ORDER BY fkc.constraint_column_id
-                """
-                
-                cursor.execute(columns_query, fk_row.constraint_object_id)
-                column_mappings = cursor.fetchall()
-                
-                parent_columns = [mapping.parent_column for mapping in column_mappings]
-                referenced_columns = [mapping.referenced_column for mapping in column_mappings]
-                
-                record = {
-                    "constraint_object_id": fk_row.constraint_object_id,
-                    "constraint_name": fk_row.constraint_name,
-                    "parent_schema": fk_row.parent_schema,
-                    "parent_table": fk_row.parent_table,
-                    "parent_columns": parent_columns,
-                    "referenced_schema": fk_row.referenced_schema,
-                    "referenced_table": fk_row.referenced_table,
-                    "referenced_columns": referenced_columns,
-                    "update_referential_action": fk_row.update_referential_action,
-                    "delete_referential_action": fk_row.delete_referential_action,
-                    "is_disabled": bool(fk_row.is_disabled),
-                    "is_not_for_replication": bool(fk_row.is_not_for_replication),
-                    "is_not_trusted": bool(fk_row.is_not_trusted),
-                }
-                yield record
-            
-            cursor.close()
-            conn.close()
+                    ORDER BY ps.name, pt.name, fk.name
+                    """
+                    
+                    cursor.execute(fk_query)
+                    foreign_keys = cursor.fetchall()
+                    
+                    # Get column mappings for each foreign key
+                    for fk_row in foreign_keys:
+                        # Get column mappings
+                        columns_query = """
+                        SELECT 
+                            pc.name as parent_column,
+                            rc.name as referenced_column
+                        FROM sys.foreign_key_columns fkc
+                        INNER JOIN sys.columns pc ON fkc.parent_object_id = pc.object_id AND fkc.parent_column_id = pc.column_id
+                        INNER JOIN sys.columns rc ON fkc.referenced_object_id = rc.object_id AND fkc.referenced_column_id = rc.column_id
+                        WHERE fkc.constraint_object_id = ?
+                        ORDER BY fkc.constraint_column_id
+                        """
+                        
+                        cursor.execute(columns_query, fk_row.constraint_object_id)
+                        column_mappings = cursor.fetchall()
+                        
+                        parent_columns = [mapping.parent_column for mapping in column_mappings]
+                        referenced_columns = [mapping.referenced_column for mapping in column_mappings]
+                        
+                        record = {
+                            "constraint_object_id": fk_row.constraint_object_id,
+                            "constraint_name": fk_row.constraint_name,
+                            "parent_schema": fk_row.parent_schema,
+                            "parent_table": fk_row.parent_table,
+                            "parent_columns": parent_columns,
+                            "referenced_schema": fk_row.referenced_schema,
+                            "referenced_table": fk_row.referenced_table,
+                            "referenced_columns": referenced_columns,
+                            "update_referential_action": fk_row.update_referential_action,
+                            "delete_referential_action": fk_row.delete_referential_action,
+                            "is_disabled": bool(fk_row.is_disabled),
+                            "is_not_for_replication": bool(fk_row.is_not_for_replication),
+                            "is_not_trusted": bool(fk_row.is_not_trusted),
+                        }
+                        yield record
                     
         except Exception as e:
             self.logger.error(f"Error reading foreign keys: {str(e)}")

@@ -36,33 +36,29 @@ class SchemasStream(OdbcStream):
         """Read all database schemas."""
         
         try:
-            conn = self._get_odbc_connection()
-            cursor = conn.cursor()
-            
-            query = """
-            SELECT 
-                s.schema_id,
-                s.name as schema_name,
-                s.principal_id,
-                p.name as principal_name
-            FROM sys.schemas s
-            LEFT JOIN sys.database_principals p ON s.principal_id = p.principal_id
-            ORDER BY s.name
-            """
-            
-            cursor.execute(query)
-            
-            for row in cursor:
-                record = {
-                    "schema_id": row.schema_id,
-                    "schema_name": row.schema_name,
-                    "principal_id": row.principal_id,
-                    "principal_name": row.principal_name,
-                }
-                yield record
-            
-            cursor.close()
-            conn.close()
+            with self._get_odbc_connection() as conn:
+                with conn.cursor() as cursor:
+                    query = """
+                    SELECT 
+                        s.schema_id,
+                        s.name as schema_name,
+                        s.principal_id,
+                        p.name as principal_name
+                    FROM sys.schemas s
+                    LEFT JOIN sys.database_principals p ON s.principal_id = p.principal_id
+                    ORDER BY s.name
+                    """
+                    
+                    cursor.execute(query)
+                    
+                    for row in cursor:
+                        record = {
+                            "schema_id": row.schema_id,
+                            "schema_name": row.schema_name,
+                            "principal_id": row.principal_id,
+                            "principal_name": row.principal_name,
+                        }
+                        yield record
                     
         except Exception as e:
             self.logger.error(f"Error reading schemas: {str(e)}")

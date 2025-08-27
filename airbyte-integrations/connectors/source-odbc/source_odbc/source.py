@@ -24,9 +24,9 @@ class SourceOdbc(AbstractSource):
         try:
             with self._connection_manager.get_odbc_connection(config) as conn:
                 # Simple test query to verify connection
-                cursor = conn.cursor()
-                cursor.execute("SELECT 1")
-                cursor.fetchone()
+                with conn.cursor() as cursor:
+                    cursor.execute("SELECT 1")
+                    cursor.fetchone()
             return True, None
 
         except Exception as e:

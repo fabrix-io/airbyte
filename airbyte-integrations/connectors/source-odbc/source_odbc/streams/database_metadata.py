@@ -43,46 +43,42 @@ class DatabaseMetadataStream(OdbcStream):
         """Read database metadata."""
         
         try:
-            conn = self._get_odbc_connection()
-            cursor = conn.cursor()
-            
-            query = """
-            SELECT 
-                name as database_name,
-                database_id,
-                collation_name,
-                create_date,
-                compatibility_level,
-                state_desc,
-                is_read_only,
-                is_auto_close_on,
-                is_auto_shrink_on,
-                recovery_model_desc,
-                page_verify_option_desc
-            FROM sys.databases 
-            WHERE name = DB_NAME()
-            """
-            
-            cursor.execute(query)
-            
-            for row in cursor:
-                record = {
-                    "database_name": row.database_name,
-                    "database_id": row.database_id,
-                    "collation_name": row.collation_name,
-                    "create_date": str(row.create_date) if row.create_date else None,
-                    "compatibility_level": row.compatibility_level,
-                    "state_desc": row.state_desc,
-                    "is_read_only": bool(row.is_read_only),
-                    "is_auto_close_on": bool(row.is_auto_close_on),
-                    "is_auto_shrink_on": bool(row.is_auto_shrink_on),
-                    "recovery_model_desc": row.recovery_model_desc,
-                    "page_verify_option_desc": row.page_verify_option_desc,
-                }
-                yield record
-            
-            cursor.close()
-            conn.close()
+            with self._get_odbc_connection() as conn:
+                with conn.cursor() as cursor:
+                    query = """
+                    SELECT 
+                        name as database_name,
+                        database_id,
+                        collation_name,
+                        create_date,
+                        compatibility_level,
+                        state_desc,
+                        is_read_only,
+                        is_auto_close_on,
+                        is_auto_shrink_on,
+                        recovery_model_desc,
+                        page_verify_option_desc
+                    FROM sys.databases 
+                    WHERE name = DB_NAME()
+                    """
+                    
+                    cursor.execute(query)
+                    
+                    for row in cursor:
+                        record = {
+                            "database_name": row.database_name,
+                            "database_id": row.database_id,
+                            "collation_name": row.collation_name,
+                            "create_date": str(row.create_date) if row.create_date else None,
+                            "compatibility_level": row.compatibility_level,
+                            "state_desc": row.state_desc,
+                            "is_read_only": bool(row.is_read_only),
+                            "is_auto_close_on": bool(row.is_auto_close_on),
+                            "is_auto_shrink_on": bool(row.is_auto_shrink_on),
+                            "recovery_model_desc": row.recovery_model_desc,
+                            "page_verify_option_desc": row.page_verify_option_desc,
+                        }
+                        yield record
                     
         except Exception as e:
             self.logger.error(f"Error reading database metadata: {str(e)}")

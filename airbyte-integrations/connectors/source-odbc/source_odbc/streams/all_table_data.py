@@ -62,81 +62,72 @@ class AllTableDataStream(OdbcStream):
         """Read all records from all tables in the database."""
         
         try:
-            conn = self._get_odbc_connection()
-            cursor = conn.cursor()
-            
-            # First, get all user tables
-            tables_query = """
-            SELECT s.name as schema_name, t.name as table_name, t.object_id
-            FROM sys.tables t
-            INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
-            WHERE t.is_ms_shipped = 0
-            ORDER BY s.name, t.name
-            """
-            
-            cursor.execute(tables_query)
-            tables = cursor.fetchall()
-            
-            self.logger.info(f"Found {len(tables)} tables to extract data from")
-            
-            # Process each table
-            for table in tables:
-                schema_name = table.schema_name
-                table_name = table.table_name
-                full_table_name = f"{schema_name}.{table_name}"
-                
-                try:
-                    # Get all records from this table
-                    data_query = f"SELECT * FROM [{schema_name}].[{table_name}]"
-                    cursor.execute(data_query)
+            with self._get_odbc_connection() as conn:
+                with conn.cursor() as cursor:
+                    # First, get all user tables
+                    tables_query = """
+                    SELECT s.name as schema_name, t.name as table_name, t.object_id
+                    FROM sys.tables t
+                    INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
+                    WHERE t.is_ms_shipped = 0
+                    ORDER BY s.name, t.name
+                    """
                     
-                    # Get column names
-                    columns = [column[0] for column in cursor.description]
+                    cursor.execute(tables_query)
+                    tables = cursor.fetchall()
                     
-                    # Track row number within this table
-                    row_num = 1
+                    self.logger.info(f"Found {len(tables)} tables to extract data from")
                     
-                    for row in cursor:
-                        # Convert row to dictionary
-                        record_data = {}
-                        for i, value in enumerate(row):
-                            column_name = columns[i]
+                    # Process each table
+                    for table in tables:
+                        schema_name = table.schema_name
+                        table_name = table.table_name
+                        full_table_name = f"{schema_name}.{table_name}"
+                        
+                        try:
+                            # Get all records from this table
+                            data_query = f"SELECT * FROM [{schema_name}].[{table_name}]"
+                            cursor.execute(data_query)
                             
-                            # Convert special types to JSON-serializable values
-                            if value is not None:
-                                if hasattr(value, 'isoformat'):  # datetime objects
-                                    record_data[column_name] = value.isoformat()
-                                elif isinstance(value, (bytes, bytearray)):  # binary data
-                                    record_data[column_name] = value.hex()
-                                elif isinstance(value, Decimal):  # decimal/numeric types
-                                    record_data[column_name] = float(value)
-                                else:
-                                    record_data[column_name] = value
-                            else:
-                                record_data[column_name] = None
-                        
-                        # Yield the combined record with metadata
-                        yield {
-                            "source_table_schema": schema_name,
-                            "source_table_name": table_name,
-                            "source_table_full_name": full_table_name,
-                            "record_data": record_data,
-                            "row_number": row_num,
-                            "extracted_at": self._get_current_timestamp()
-                        }
-                        
-                        row_num += 1
-                    
-                    self.logger.info(f"Extracted {row_num - 1} records from {full_table_name}")
-                    
-                except Exception as e:
-                    self.logger.error(f"Error reading data from table {full_table_name}: {str(e)}")
-                    # Continue with next table instead of failing completely
-                    continue
-            
-            cursor.close()
-            conn.close()
-            
+                            # Get column names
+                            columns = [column[0] for column in cursor.description]
+                            
+                            # Track row number within this table
+                            row_num = 1
+                            
+                            for row in cursor:
+                                # Convert row to dictionary
+                                record_data = {}
+                                for i, value in enumerate(row):
+                                    column_name = columns[i]
+                                    
+                                    # Convert special types to JSON-serializable values
+                                    if value is not None:
+                                        if hasattr(value, 'isoformat'):  # datetime objects
+                                            record_data[column_name] = value.isoformat()
+                                        elif isinstance(value, (bytes, bytearray)):  # binary data
+                                            record_data[column_name] = value.hex()
+                                        elif isinstance(value, Decimal):  # decimal/numeric types
+                                            record_data[column_name] = float(value)
+                                        else:
+                                            record_data[column_name] = value
+                                    else:
+                                        record_data[column_name] = None
+                                
+                                # Yield the combined record with metadata
+                                yield {
+                                    "source_table_schema": schema_name,
+                                    "source_table_name": table_name,
+                                    "source_table_full_name": full_table_name,
+                                    "record_data": record_data,
+                                    "row_number": row_num,
+                                    "extracted_at": self._get_current_timestamp()
+                                }
+                                
+                        except Exception as table_error:
+                            self.logger.warning(f"Error reading table {full_table_name}: {str(table_error)}")
+                            # Continue with next table instead of failing completely
+                            
         except Exception as e:
             self.logger.error(f"Error reading table data: {str(e)}")
             raise

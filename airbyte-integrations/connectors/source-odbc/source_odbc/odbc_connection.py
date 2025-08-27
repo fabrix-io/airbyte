@@ -1,5 +1,8 @@
 import os
+
 import pyodbc
+
+from .odbc_cursor import OdbcCursor
 
 
 class OdbcConnection:
@@ -59,8 +62,29 @@ class OdbcConnection:
             raise RuntimeError("Connection has been closed")
         return self._connection.execute(query, *args, **kwargs)
     
-    def cursor(self):
-        """Get a cursor from the connection."""
+    def cursor(self) -> OdbcCursor:
+        """Get a cursor context manager from the connection.
+        
+        Returns:
+            OdbcCursor: A context manager that automatically handles cursor lifecycle
+            
+        Example:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT * FROM table")
+                rows = cursor.fetchall()
+        """
+        if self._closed:
+            raise RuntimeError("Connection has been closed")
+        return OdbcCursor(self._connection)
+    
+    def raw_cursor(self) -> pyodbc.Cursor:
+        """Get a raw pyodbc cursor from the connection.
+        
+        Note: This bypasses the context manager. Use cursor() instead for automatic cleanup.
+        
+        Returns:
+            pyodbc.Cursor: Raw cursor object
+        """
         if self._closed:
             raise RuntimeError("Connection has been closed")
         return self._connection.cursor()
