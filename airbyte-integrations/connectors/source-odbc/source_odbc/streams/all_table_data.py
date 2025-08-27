@@ -121,7 +121,6 @@ class AllTableDataStream(OdbcStream):
                                     "source_table_full_name": full_table_name,
                                     "record_data": record_data,
                                     "row_number": row_num,
-                                    "extracted_at": self._get_current_timestamp()
                                 }
                                 
                         except Exception as table_error:
@@ -132,7 +131,3 @@ class AllTableDataStream(OdbcStream):
             self.logger.error(f"Error reading table data: {str(e)}")
             raise
     
-    def _get_current_timestamp(self) -> str:
-        """Get current timestamp as ISO string."""
-        from datetime import datetime, timezone
-        return datetime.now(timezone.utc).isoformat()
