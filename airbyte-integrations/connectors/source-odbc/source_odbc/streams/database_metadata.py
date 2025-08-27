@@ -70,8 +70,8 @@ class DatabaseMetadataStream(OdbcStream):
                     try:
                         schemas = set()
                         for row in cursor.tables():
-                            table_type = getattr(row, 'table_type', '')
-                            schema = getattr(row, 'table_schem', None)
+                            table_type = row.table_type
+                            schema = row.table_schem
                             
                             if schema:
                                 schemas.add(schema)
