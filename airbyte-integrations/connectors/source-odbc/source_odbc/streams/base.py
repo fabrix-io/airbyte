@@ -4,6 +4,7 @@ from typing import Any, Mapping, Optional
 from airbyte_cdk.sources.streams import Stream
 
 from ..connection import OdbcConnectionManager
+from ..odbc_connection import OdbcConnection
 
 
 
@@ -34,6 +35,6 @@ class OdbcStream(Stream, ABC):
     def get_json_schema(self) -> Mapping[str, Any]:
         ...
 
-    def _get_odbc_connection(self) -> Any:
-        """Create an ODBC connection using the shared connection manager."""
+    def _get_odbc_connection(self) -> OdbcConnection:
+        """Create an ODBC connection context manager using the shared connection manager."""
         return self._connection_manager.get_odbc_connection(self._config)

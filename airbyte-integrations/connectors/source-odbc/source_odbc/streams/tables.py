@@ -45,66 +45,61 @@ class TablesStream(OdbcStream):
         """Read all database tables."""
         
         try:
-            conn = self._get_odbc_connection()
-            cursor = conn.cursor()
-            
-            query = """
-            SELECT 
-                t.object_id,
-                s.name as schema_name,
-                t.name as table_name,
-                s.name + '.' + t.name as full_table_name,
-                CASE 
-                    WHEN t.type = 'U' THEN 'BASE TABLE'
-                    WHEN t.type = 'V' THEN 'VIEW'
-                    ELSE t.type_desc
-                END as table_type,
-                t.create_date,
-                t.modify_date,
-                ISNULL(p.rows, 0) as row_count,
-                CAST(CASE WHEN EXISTS(
-                    SELECT 1 FROM sys.indexes i 
-                    WHERE i.object_id = t.object_id AND i.type = 1
-                ) THEN 1 ELSE 0 END AS BIT) as has_clustered_index,
-                CAST(CASE WHEN EXISTS(
-                    SELECT 1 FROM sys.key_constraints kc 
-                    WHERE kc.parent_object_id = t.object_id AND kc.type = 'PK'
-                ) THEN 1 ELSE 0 END AS BIT) as has_primary_key,
-                t.is_replicated,
-                t.is_published,
-                ISNULL(p.data_compression_desc, 'NONE') as data_compression_desc
-            FROM sys.tables t
-            INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
-            LEFT JOIN sys.partitions p ON t.object_id = p.object_id AND p.index_id IN (0, 1)
-            WHERE t.is_ms_shipped = 0
-            ORDER BY s.name, t.name
-            """
-            
-            cursor.execute(query)
-            
-            for row in cursor:
-                record = {
-                    "object_id": row.object_id,
-                    "schema_name": row.schema_name,
-                    "table_name": row.table_name,
-                    "full_table_name": row.full_table_name,
-                    "table_type": row.table_type,
-                    "create_date": str(row.create_date) if row.create_date else None,
-                    "modify_date": str(row.modify_date) if row.modify_date else None,
-                    "row_count": row.row_count,
-                    "has_clustered_index": bool(row.has_clustered_index),
-                    "has_primary_key": bool(row.has_primary_key),
-                    "is_replicated": bool(row.is_replicated),
-                    "is_published": bool(row.is_published),
-                    "data_compression_desc": row.data_compression_desc,
-                }
-                yield record
-            
-            cursor.close()
-            conn.close()
-            self._connection_manager.cleanup_temp_files()
+            with self._get_odbc_connection() as conn:
+                cursor = conn.cursor()
+                
+                query = """
+                SELECT 
+                    t.object_id,
+                    s.name as schema_name,
+                    t.name as table_name,
+                    s.name + '.' + t.name as full_table_name,
+                    CASE 
+                        WHEN t.type = 'U' THEN 'BASE TABLE'
+                        WHEN t.type = 'V' THEN 'VIEW'
+                        ELSE t.type_desc
+                    END as table_type,
+                    t.create_date,
+                    t.modify_date,
+                    ISNULL(p.rows, 0) as row_count,
+                    CAST(CASE WHEN EXISTS(
+                        SELECT 1 FROM sys.indexes i 
+                        WHERE i.object_id = t.object_id AND i.type = 1
+                    ) THEN 1 ELSE 0 END AS BIT) as has_clustered_index,
+                    CAST(CASE WHEN EXISTS(
+                        SELECT 1 FROM sys.key_constraints kc 
+                        WHERE kc.parent_object_id = t.object_id AND kc.type = 'PK'
+                    ) THEN 1 ELSE 0 END AS BIT) as has_primary_key,
+                    t.is_replicated,
+                    t.is_published,
+                    ISNULL(p.data_compression_desc, 'NONE') as data_compression_desc
+                FROM sys.tables t
+                INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
+                LEFT JOIN sys.partitions p ON t.object_id = p.object_id AND p.index_id IN (0, 1)
+                WHERE t.is_ms_shipped = 0
+                ORDER BY s.name, t.name
+                """
+                
+                cursor.execute(query)
+                
+                for row in cursor:
+                    record = {
+                        "object_id": row.object_id,
+                        "schema_name": row.schema_name,
+                        "table_name": row.table_name,
+                        "full_table_name": row.full_table_name,
+                        "table_type": row.table_type,
+                        "create_date": str(row.create_date) if row.create_date else None,
+                        "modify_date": str(row.modify_date) if row.modify_date else None,
+                        "row_count": row.row_count,
+                        "has_clustered_index": bool(row.has_clustered_index),
+                        "has_primary_key": bool(row.has_primary_key),
+                        "is_replicated": bool(row.is_replicated),
+                        "is_published": bool(row.is_published),
+                        "data_compression_desc": row.data_compression_desc,
+                    }
+                    yield record
                     
         except Exception as e:
-            self._connection_manager.cleanup_temp_files()
             self.logger.error(f"Error reading tables: {str(e)}")
             raise e

@@ -25,20 +25,15 @@ class SourceOdbc(AbstractSource):
 
     def check_connection(self, logger, config: Mapping[str, Any]) -> Tuple[bool, Optional[str]]:
         try:
-            conn = self._connection_manager.get_odbc_connection(config)
-            # Simple test query to verify connection
-            cursor = conn.cursor()
-            cursor.execute("SELECT 1")
-            cursor.fetchone()
-            cursor.close()
-            conn.close()
+            with self._connection_manager.get_odbc_connection(config) as conn:
+                # Simple test query to verify connection
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
             return True, None
 
         except Exception as e:
             return False, f"Error connecting to ODBC server: {str(e)}"
-        finally:
-            # Cleanup temporary files
-            self._connection_manager.cleanup_temp_files()
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         """Return all available streams."""

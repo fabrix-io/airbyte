@@ -12,6 +12,8 @@ from impacket.krb5.ccache import CCache
 from impacket.krb5.kerberosv5 import getKerberosTGT
 from impacket.krb5.types import Principal
 
+from .odbc_connection import OdbcConnection
+
 
 class OdbcConnectionManager:
     """Manages ODBC connections with Kerberos authentication and driver auto-detection."""
@@ -153,8 +155,8 @@ class OdbcConnectionManager:
             f"Please install a compatible ODBC driver."
         )
 
-    def get_odbc_connection(self, config: Mapping[str, Any]) -> Any:
-        """Create an ODBC connection with database-specific driver auto-detection."""
+    def get_odbc_connection(self, config: Mapping[str, Any]) -> OdbcConnection:
+        """Create an ODBC connection context manager with database-specific driver auto-detection."""
         
         server = config['server']
         database = config['database']
@@ -233,7 +235,8 @@ class OdbcConnectionManager:
                         autocommit=True
                     )
                     
-                    return connection
+                    # Return the connection wrapped in our context manager
+                    return OdbcConnection(connection, self._temp_files.copy(), self.cleanup_temp_files)
                     
                 except Exception as e:
                     last_error = e
