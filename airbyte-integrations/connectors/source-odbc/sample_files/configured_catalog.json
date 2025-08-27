@@ -8,14 +8,184 @@
           "type": "object",
           "properties": {
             "id": {"type": "integer", "description": "Unique identifier"},
-            "message": {"type": "string", "description": "Hello world message"},
-            "timestamp": {"type": "string", "description": "Current timestamp from database"},
-            "database_name": {"type": "string", "description": "Name of the connected database"},
-            "server_version": {"type": ["string", "null"], "description": "Database server version"},
-            "current_user": {"type": ["string", "null"], "description": "Current authenticated user"}
+            "username": {"type": ["string", "null"], "description": "Current database user"},
+            "system_user": {"type": ["string", "null"], "description": "System user identity"},
+            "message": {"type": "string", "description": "Hello message for the user"},
+            "timestamp": {"type": ["string", "null"], "description": "Current timestamp from database"},
+            "database_name": {"type": ["string", "null"], "description": "Name of the connected database"},
+            "server_name": {"type": ["string", "null"], "description": "Database server name"},
+            "auth_scheme": {"type": ["string", "null"], "description": "Authentication scheme used"}
           }
         },
-        "supported_sync_modes": ["full_refresh"]
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_primary_key": [["id"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "database_metadata",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "database_name": {"type": "string", "description": "Database name"},
+            "database_id": {"type": "integer", "description": "Database ID"},
+            "collation_name": {"type": ["string", "null"], "description": "Database collation"},
+            "create_date": {"type": ["string", "null"], "description": "Database creation date"},
+            "compatibility_level": {"type": ["integer", "null"], "description": "Compatibility level"},
+            "state_desc": {"type": ["string", "null"], "description": "Database state"},
+            "is_read_only": {"type": "boolean", "description": "Is database read-only"},
+            "is_auto_close_on": {"type": "boolean", "description": "Auto close setting"},
+            "is_auto_shrink_on": {"type": "boolean", "description": "Auto shrink setting"},
+            "recovery_model_desc": {"type": ["string", "null"], "description": "Recovery model"},
+            "page_verify_option_desc": {"type": ["string", "null"], "description": "Page verify option"}
+          }
+        },
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_primary_key": [["database_name"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "schemas",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "schema_id": {"type": "integer", "description": "Schema ID"},
+            "schema_name": {"type": "string", "description": "Schema name"},
+            "principal_id": {"type": ["integer", "null"], "description": "Schema owner principal ID"},
+            "principal_name": {"type": ["string", "null"], "description": "Schema owner name"}
+          }
+        },
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_primary_key": [["schema_id"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "tables",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "object_id": {"type": "integer", "description": "Table object ID"},
+            "schema_name": {"type": "string", "description": "Schema name"},
+            "table_name": {"type": "string", "description": "Table name"},
+            "full_table_name": {"type": "string", "description": "Schema.Table name"},
+            "table_type": {"type": "string", "description": "Table type (BASE TABLE, VIEW, etc.)"},
+            "create_date": {"type": ["string", "null"], "description": "Table creation date"},
+            "modify_date": {"type": ["string", "null"], "description": "Table last modification date"},
+            "row_count": {"type": ["integer", "null"], "description": "Approximate row count"},
+            "has_clustered_index": {"type": "boolean", "description": "Has clustered index"},
+            "has_primary_key": {"type": "boolean", "description": "Has primary key"},
+            "is_replicated": {"type": "boolean", "description": "Is replicated"},
+            "is_published": {"type": "boolean", "description": "Is published for replication"},
+            "data_compression_desc": {"type": ["string", "null"], "description": "Data compression type"}
+          }
+        },
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_primary_key": [["object_id"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "columns",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "object_id": {"type": "integer", "description": "Table object ID"},
+            "column_id": {"type": "integer", "description": "Column ID"},
+            "schema_name": {"type": "string", "description": "Schema name"},
+            "table_name": {"type": "string", "description": "Table name"},
+            "column_name": {"type": "string", "description": "Column name"},
+            "data_type": {"type": "string", "description": "Data type name"},
+            "max_length": {"type": ["integer", "null"], "description": "Maximum length"},
+            "precision": {"type": ["integer", "null"], "description": "Numeric precision"},
+            "scale": {"type": ["integer", "null"], "description": "Numeric scale"},
+            "is_nullable": {"type": "boolean", "description": "Is nullable"},
+            "is_identity": {"type": "boolean", "description": "Is identity column"},
+            "is_computed": {"type": "boolean", "description": "Is computed column"},
+            "default_definition": {"type": ["string", "null"], "description": "Default value definition"},
+            "collation_name": {"type": ["string", "null"], "description": "Column collation"},
+            "is_primary_key": {"type": "boolean", "description": "Is part of primary key"},
+            "is_foreign_key": {"type": "boolean", "description": "Is part of foreign key"},
+            "ordinal_position": {"type": "integer", "description": "Column position in table"},
+            "full_data_type": {"type": "string", "description": "Complete data type definition"}
+          }
+        },
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_primary_key": [["object_id"], ["column_id"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "indexes",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "object_id": {"type": "integer", "description": "Table object ID"},
+            "index_id": {"type": "integer", "description": "Index ID"},
+            "schema_name": {"type": "string", "description": "Schema name"},
+            "table_name": {"type": "string", "description": "Table name"},
+            "index_name": {"type": ["string", "null"], "description": "Index name"},
+            "index_type": {"type": "string", "description": "Index type"},
+            "is_unique": {"type": "boolean", "description": "Is unique index"},
+            "is_primary_key": {"type": "boolean", "description": "Is primary key index"},
+            "is_clustered": {"type": "boolean", "description": "Is clustered index"},
+            "fill_factor": {"type": ["integer", "null"], "description": "Fill factor"},
+            "is_padded": {"type": "boolean", "description": "Is padded"},
+            "is_disabled": {"type": "boolean", "description": "Is disabled"},
+            "allow_row_locks": {"type": "boolean", "description": "Allow row locks"},
+            "allow_page_locks": {"type": "boolean", "description": "Allow page locks"},
+            "data_compression_desc": {"type": ["string", "null"], "description": "Data compression"},
+            "key_columns": {"type": "array", "items": {"type": "string"}, "description": "Key column names"},
+            "included_columns": {"type": "array", "items": {"type": "string"}, "description": "Included column names"},
+            "filter_definition": {"type": ["string", "null"], "description": "Filter condition"}
+          }
+        },
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_primary_key": [["object_id"], ["index_id"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "foreign_keys",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "constraint_object_id": {"type": "integer", "description": "Foreign key constraint object ID"},
+            "constraint_name": {"type": "string", "description": "Foreign key constraint name"},
+            "parent_schema": {"type": "string", "description": "Parent table schema"},
+            "parent_table": {"type": "string", "description": "Parent table name"},
+            "parent_columns": {"type": "array", "items": {"type": "string"}, "description": "Parent table columns"},
+            "referenced_schema": {"type": "string", "description": "Referenced table schema"},
+            "referenced_table": {"type": "string", "description": "Referenced table name"},
+            "referenced_columns": {"type": "array", "items": {"type": "string"}, "description": "Referenced table columns"},
+            "update_referential_action": {"type": "string", "description": "ON UPDATE action"},
+            "delete_referential_action": {"type": "string", "description": "ON DELETE action"},
+            "is_disabled": {"type": "boolean", "description": "Is constraint disabled"},
+            "is_not_for_replication": {"type": "boolean", "description": "Not for replication"},
+            "is_not_trusted": {"type": "boolean", "description": "Is not trusted"}
+          }
+        },
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_primary_key": [["constraint_object_id"]]
       },
       "sync_mode": "full_refresh",
       "destination_sync_mode": "overwrite"

@@ -114,3 +114,9 @@ connectionSpecification:
       description: Connection timeout in seconds
       default: 30
       order: 12
+    include_table_data:
+      type: boolean
+      title: Include Table Data
+      description: Whether to include actual table data streams (can be large)
+      default: true
+      order: 13
