@@ -63,9 +63,7 @@ class SchemasStream(OdbcStream):
             
             cursor.close()
             conn.close()
-            self._connection_manager.cleanup_temp_files()
                     
         except Exception as e:
-            self._connection_manager.cleanup_temp_files()
             self.logger.error(f"Error reading schemas: {str(e)}")
             raise e

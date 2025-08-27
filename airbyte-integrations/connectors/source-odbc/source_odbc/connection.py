@@ -1,12 +1,12 @@
-"""Shared ODBC connection utilities with Kerberos authentication and driver auto-detection."""
-
 import os
 import tempfile
 import textwrap
+
+import pyodbc
+
 from binascii import unhexlify
 from typing import Any, List, Mapping, Tuple
 
-import pyodbc
 from impacket.krb5 import constants
 from impacket.krb5.ccache import CCache
 from impacket.krb5.kerberosv5 import getKerberosTGT
@@ -19,20 +19,16 @@ class OdbcConnectionManager:
     """Manages ODBC connections with Kerberos authentication and driver auto-detection."""
     
     def __init__(self):
-        self._temp_files = []  # Track temporary files for cleanup
+        pass  # No longer need to track temp files at manager level
 
-    def cleanup_temp_files(self):
-        """Clean up temporary Kerberos files."""
-        for file_path in self._temp_files:
-            if os.path.exists(file_path):
-                try:
-                    os.unlink(file_path)
-                except Exception:
-                    pass  # Ignore cleanup errors
-        self._temp_files.clear()
-
-    def setup_kerberos_config(self, realm: str, kdc_host: str) -> Tuple[str, str]:
-        """Setup Kerberos configuration."""
+    def setup_kerberos_config(self, realm: str, kdc_host: str, temp_files: List[str]) -> Tuple[str, str]:
+        """Setup Kerberos configuration.
+        
+        Args:
+            realm: Kerberos realm
+            kdc_host: KDC host
+            temp_files: List to track temp files for this connection
+        """
         krb5_conf = textwrap.dedent(f"""
         [libdefaults]
           default_realm = {realm}
@@ -60,18 +56,26 @@ class OdbcConnectionManager:
         with open(krb5_path, "w") as f:
             f.write(krb5_conf)
         os.environ["KRB5_CONFIG"] = krb5_path
-        self._temp_files.append(krb5_path)
+        temp_files.append(krb5_path)
         
         # Set up credential cache
         ccache_path = tempfile.mktemp(prefix="krbcc_", suffix=".ccache")
         os.environ["KRB5CCNAME"] = f"FILE:{ccache_path}"
         os.environ["KRB5_CCNAME"] = f"FILE:{ccache_path}"
-        self._temp_files.append(ccache_path)
+        temp_files.append(ccache_path)
         
         return krb5_path, ccache_path
 
-    def authenticate_with_kerberos(self, username: str, password: str, realm: str, kdc_host: str) -> str:
-        """Use impacket for pure Python Kerberos authentication."""
+    def authenticate_with_kerberos(self, username: str, password: str, realm: str, kdc_host: str, temp_files: List[str]) -> str:
+        """Use impacket for pure Python Kerberos authentication.
+        
+        Args:
+            username: Username for authentication
+            password: Password for authentication
+            realm: Kerberos realm
+            kdc_host: KDC host
+            temp_files: List to track temp files for this connection
+        """
         client = Principal(username, type=constants.PrincipalNameType.NT_PRINCIPAL.value)
         
         tgt, cipher, old_session_key, session_key = getKerberosTGT(
@@ -90,7 +94,7 @@ class OdbcConnectionManager:
             ccache_path = tempfile.mktemp(prefix="impacket_", suffix=".ccache")
             os.environ["KRB5CCNAME"] = f"FILE:{ccache_path}"
             os.environ["KRB5_CCNAME"] = f"FILE:{ccache_path}"
-            self._temp_files.append(ccache_path)
+            temp_files.append(ccache_path)
         
         # Create and save ccache
         cc = CCache()
@@ -171,6 +175,9 @@ class OdbcConnectionManager:
         realm = config.get('realm')
         kdc_host = config.get('kdc_host')
 
+        # Track temp files for this specific connection
+        connection_temp_files = []
+
         try:
             # Setup Kerberos authentication if required
             if auth_type == "ActiveDirectoryKerberos":
@@ -178,8 +185,8 @@ class OdbcConnectionManager:
                     raise ValueError("realm and kdc_host are required for ActiveDirectoryKerberos authentication")
                 
                 # Setup Kerberos configuration and authenticate
-                krb5_path, ccache_path = self.setup_kerberos_config(realm, kdc_host)
-                actual_ccache = self.authenticate_with_kerberos(username, password, realm, kdc_host)
+                krb5_path, ccache_path = self.setup_kerberos_config(realm, kdc_host, connection_temp_files)
+                actual_ccache = self.authenticate_with_kerberos(username, password, realm, kdc_host, connection_temp_files)
 
             # Get available drivers
             available_drivers = pyodbc.drivers()
@@ -236,7 +243,7 @@ class OdbcConnectionManager:
                     )
                     
                     # Return the connection wrapped in our context manager
-                    return OdbcConnection(connection, self._temp_files.copy(), self.cleanup_temp_files)
+                    return OdbcConnection(connection, connection_temp_files)
                     
                 except Exception as e:
                     last_error = e
@@ -250,6 +257,16 @@ class OdbcConnectionManager:
             )
 
         except Exception as e:
-            # Cleanup temp files on error
-            self.cleanup_temp_files()
+            # Cleanup temp files for this connection on error
+            self._cleanup_connection_temp_files(connection_temp_files)
             raise e
+
+    @staticmethod
+    def _cleanup_connection_temp_files(temp_files: List[str]):
+        """Clean up temporary files for a specific connection."""
+        for file_path in temp_files:
+            if os.path.exists(file_path):
+                try:
+                    os.unlink(file_path)
+                except Exception:
+                    pass  # Ignore cleanup errors

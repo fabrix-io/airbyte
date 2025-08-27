@@ -1,6 +1,4 @@
-import os
-import sys
-from typing import Any, List, Mapping, Optional, Tuple
+from typing import Any, Mapping, Optional, Tuple
 
 from airbyte_cdk import AbstractSource
 from airbyte_cdk.sources.streams import Stream
@@ -15,7 +13,6 @@ from .streams import (
     ForeignKeysStream,
     AllTableDataStream,
 )
-
 
 
 class SourceOdbc(AbstractSource):
@@ -35,7 +32,7 @@ class SourceOdbc(AbstractSource):
         except Exception as e:
             return False, f"Error connecting to ODBC server: {str(e)}"
 
-    def streams(self, config: Mapping[str, Any]) -> List[Stream]:
+    def streams(self, config: Mapping[str, Any]) -> list[Stream]:
         """Return all available streams."""
         
         streams = [

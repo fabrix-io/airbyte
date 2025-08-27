@@ -24,7 +24,6 @@ The working Kerberos authentication code has been successfully integrated into t
 ### 4. Key Methods Added
 - `_setup_kerberos_config()`: Creates Kerberos configuration
 - `_authenticate_with_kerberos()`: Performs Kerberos authentication
-- `_cleanup_temp_files()`: Cleans up temporary files
 
 ## Example Configuration
 

@@ -133,9 +133,7 @@ class IndexesStream(OdbcStream):
             
             cursor.close()
             conn.close()
-            self._connection_manager.cleanup_temp_files()
                     
         except Exception as e:
-            self._connection_manager.cleanup_temp_files()
             self.logger.error(f"Error reading indexes: {str(e)}")
             raise e

@@ -136,13 +136,10 @@ class AllTableDataStream(OdbcStream):
             
             cursor.close()
             conn.close()
-            self._connection_manager.cleanup_temp_files()
             
         except Exception as e:
             self.logger.error(f"Error reading table data: {str(e)}")
             raise
-        finally:
-            self._connection_manager.cleanup_temp_files()
     
     def _get_current_timestamp(self) -> str:
         """Get current timestamp as ISO string."""

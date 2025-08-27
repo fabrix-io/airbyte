@@ -1,20 +1,17 @@
+import os
 import pyodbc
-
-from typing import Callable, Optional
 
 
 class OdbcConnection:
-    def __init__(self, connection: 'pyodbc.Connection', temp_files: list, cleanup_func: Optional[Callable] = None):
+    def __init__(self, connection: 'pyodbc.Connection', temp_files: list[str]):
         """Initialize the ODBC connection wrapper.
         
         Args:
             connection: The pyodbc connection object
-            temp_files: List of temporary files to clean up
-            cleanup_func: Optional cleanup function to call on exit
+            temp_files: List of temporary files to clean up when this connection closes
         """
         self._connection = connection
-        self._temp_files = temp_files
-        self._cleanup_func = cleanup_func
+        self._temp_files = temp_files.copy()  # Create a copy to avoid shared references
         self._closed = False
     
     def __enter__(self):
@@ -25,6 +22,16 @@ class OdbcConnection:
         """Exit the context manager and clean up resources."""
         self.close()
     
+    def _cleanup_temp_files(self):
+        """Clean up this connection's temporary files."""
+        for file_path in self._temp_files:
+            if os.path.exists(file_path):
+                try:
+                    os.unlink(file_path)
+                except Exception:
+                    pass  # Ignore cleanup errors
+        self._temp_files.clear()
+
     def close(self):
         """Close the connection and clean up temporary files."""
         if not self._closed:
@@ -34,12 +41,8 @@ class OdbcConnection:
             except Exception:
                 pass  # Ignore connection close errors
             
-            # Clean up temporary files using the cleanup function
-            if self._cleanup_func:
-                try:
-                    self._cleanup_func()
-                except Exception:
-                    pass  # Ignore cleanup errors
+            # Clean up this connection's temporary files
+            self._cleanup_temp_files()
             
             self._closed = True
     
