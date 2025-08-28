@@ -20,7 +20,6 @@ from .odbc_connection import OdbcConnection
 class OdbcConnectionManager:
     
     def setup_kerberos_config(self, realm: str, kdc_host: str, temp_files: List[str]) -> Tuple[str, str]:
-        #TODO: This should be a connection configuration!!!!
         krb5_conf = textwrap.dedent(f"""
         [libdefaults]
           default_realm = {realm}
@@ -210,7 +209,7 @@ class OdbcConnectionManager:
                         # Add PostgreSQL-specific SSL settings if needed
                         conn_str_parts.append("SSLMode=prefer")
                         
-                    else:  # SQL Server and other databases
+                    elif database_type == DatabaseType.SQL_SERVER:
                         conn_str_parts = [
                             f"DRIVER={{{current_driver}}}",
                             f"SERVER={server},{port}" if port != 1433 else f"SERVER={server}",
