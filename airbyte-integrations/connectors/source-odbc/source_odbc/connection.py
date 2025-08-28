@@ -167,9 +167,9 @@ class OdbcConnectionManager:
         connection_temp_files = []
 
         try:
-            if auth_type == AuthenticationType.ACTIVE_DIRECTORY_KERBEROS:
+            if auth_type == AuthenticationType.ACTIVE_DIRECTORY_INTEGRATED:
                 if not realm or not kdc_host:
-                    raise ValueError("realm and kdc_host are required for ActiveDirectoryKerberos authentication")
+                    raise ValueError("realm and kdc_host are required for ActiveDirectoryIntegrated authentication")
                 
                 # Setup Kerberos configuration and authenticate
                 krb5_path, ccache_path = self.setup_kerberos_config(realm, kdc_host, connection_temp_files)
@@ -218,16 +218,16 @@ class OdbcConnectionManager:
                         ]
                         
                         # Add authentication based on type
-                        if auth_type in (AuthenticationType.ACTIVE_DIRECTORY, AuthenticationType.ACTIVE_DIRECTORY_PASSWORD):
+                        if auth_type == AuthenticationType.ACTIVE_DIRECTORY_PASSWORD:
                             conn_str_parts.extend([
                                 f"UID={username}",
                                 f"PWD={password}",
                                 "Authentication=ActiveDirectoryPassword"
                             ])
-                        elif auth_type in (AuthenticationType.ACTIVE_DIRECTORY_INTEGRATED, AuthenticationType.ACTIVE_DIRECTORY_KERBEROS):
-                            # For Kerberos, we use Trusted_Connection which relies on the Kerberos ticket
+                        elif auth_type == AuthenticationType.ACTIVE_DIRECTORY_INTEGRATED:
+                            # For Integrated, we use Trusted_Connection which relies on the Kerberos ticket
                             conn_str_parts.append("Trusted_Connection=Yes")
-                        else:  # SqlServerAuthentication
+                        elif auth_type == AuthenticationType.SQL_SERVER_AUTHENTICATION:
                             conn_str_parts.extend([
                                 f"UID={username}",
                                 f"PWD={password}"

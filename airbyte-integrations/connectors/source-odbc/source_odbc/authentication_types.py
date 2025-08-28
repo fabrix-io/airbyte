@@ -2,11 +2,10 @@ from enum import Enum
 
 
 class AuthenticationType(Enum):
-    ACTIVE_DIRECTORY = "ActiveDirectory"
-    SQL_SERVER_AUTHENTICATION = "SqlServerAuthentication"
-    ACTIVE_DIRECTORY_INTEGRATED = "ActiveDirectoryIntegrated"
+    # Docs: https://learn.microsoft.com/en-us/sql/connect/odbc/using-azure-active-directory?view=sql-server-ver17
+    SQL_SERVER_AUTHENTICATION = "SqlPassword"
+    ACTIVE_DIRECTORY_INTEGRATED = "ActiveDirectoryIntegrated" # Kerberos
     ACTIVE_DIRECTORY_PASSWORD = "ActiveDirectoryPassword"
-    ACTIVE_DIRECTORY_KERBEROS = "ActiveDirectoryKerberos"
     
     @classmethod
     def from_string(cls, value: str) -> "AuthenticationType":

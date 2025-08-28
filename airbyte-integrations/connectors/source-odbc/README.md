@@ -9,8 +9,7 @@ This is the repository for the ODBC source connector, which connects to ODBC-com
 - Support for various authentication methods:
   - ActiveDirectoryPassword
   - ActiveDirectoryIntegrated
-  - ActiveDirectoryKerberos (using pure Python Kerberos implementation)
-  - SqlServerAuthentication
+  - SqlPassword
 - SSL/TLS encryption support
 - Configurable connection timeouts
 
@@ -38,7 +37,7 @@ This is the repository for the ODBC source connector, which connects to ODBC-com
 - **ActiveDirectoryIntegrated**: Uses integrated Windows authentication
 - **ActiveDirectoryPassword**: Explicit Active Directory password authentication
 - **ActiveDirectoryKerberos**: Pure Python Kerberos authentication using impacket library
-- **SqlServerAuthentication**: Standard SQL Server authentication
+- **SqlServer**: Standard SQL Server authentication
 
 ## Kerberos Authentication
 

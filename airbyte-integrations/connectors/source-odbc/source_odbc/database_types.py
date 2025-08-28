@@ -32,7 +32,7 @@ class DatabaseType(Enum):
     
     def get_default_auth_type(self) -> AuthenticationType:
         auth_mapping = {
-            self.SQL_SERVER: AuthenticationType.ACTIVE_DIRECTORY_KERBEROS,
+            self.SQL_SERVER: AuthenticationType.ACTIVE_DIRECTORY_INTEGRATED,
             self.POSTGRESQL: AuthenticationType.SQL_SERVER_AUTHENTICATION,
         }
         return auth_mapping[self]

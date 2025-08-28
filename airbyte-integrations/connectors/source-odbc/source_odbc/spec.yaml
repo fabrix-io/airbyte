@@ -62,13 +62,11 @@ connectionSpecification:
       type: string
       title: Authentication Type
       description: The authentication method to use
-      default: "ActiveDirectoryKerberos"
+      default: "ActiveDirectoryIntegrated"
       enum:
-        - "ActiveDirectory"
-        - "SqlServerAuthentication"
+        - "SqlPassword"
         - "ActiveDirectoryIntegrated"
         - "ActiveDirectoryPassword"
-        - "ActiveDirectoryKerberos"
       order: 7
     # Kerberos-specific configuration
     realm:
