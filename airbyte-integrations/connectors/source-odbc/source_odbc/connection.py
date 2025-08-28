@@ -17,12 +17,9 @@ from .odbc_connection import OdbcConnection
 
 
 class OdbcConnectionManager:
-    """Manages ODBC connections with Kerberos authentication and driver auto-detection."""
     
-    def __init__(self):
-        pass  # No longer need to track temp files at manager level
-
     def setup_kerberos_config(self, realm: str, kdc_host: str, temp_files: List[str]) -> Tuple[str, str]:
+        #TODO: This should be a connection configuration!!!!
         krb5_conf = textwrap.dedent(f"""
         [libdefaults]
           default_realm = {realm}
@@ -30,7 +27,7 @@ class OdbcConnectionManager:
           dns_lookup_realm = false
           rdns = false
           ticket_lifetime = 24h
-          forwardable = true
+          forwardable = false
           udp_preference_limit = 1
 
         [realms]
@@ -40,8 +37,6 @@ class OdbcConnectionManager:
           }}
 
         [domain_realm]
-          .compute-1.amazonaws.com = {realm}
-          compute-1.amazonaws.com = {realm}
           .{realm.lower()} = {realm}
           {realm.lower()} = {realm}
         """).strip() + "\n"
