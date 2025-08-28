@@ -1,5 +1,7 @@
 from enum import Enum
 
+from .authentication_types import AuthenticationType
+
 
 class DatabaseType(Enum):
     """Enumeration of supported database types."""
@@ -28,9 +30,9 @@ class DatabaseType(Enum):
         }
         return port_mapping[self]
     
-    def get_default_auth_type(self) -> str:
+    def get_default_auth_type(self) -> AuthenticationType:
         auth_mapping = {
-            self.SQL_SERVER: "ActiveDirectory",
-            self.POSTGRESQL: "SqlServerAuthentication",
+            self.SQL_SERVER: AuthenticationType.ACTIVE_DIRECTORY_KERBEROS,
+            self.POSTGRESQL: AuthenticationType.SQL_SERVER_AUTHENTICATION,
         }
         return auth_mapping[self]

@@ -12,6 +12,7 @@ from impacket.krb5.ccache import CCache
 from impacket.krb5.kerberosv5 import getKerberosTGT
 from impacket.krb5.types import Principal
 
+from .authentication_types import AuthenticationType
 from .database_types import DatabaseType
 from .odbc_connection import OdbcConnection
 
@@ -31,14 +32,14 @@ class OdbcConnectionManager:
           udp_preference_limit = 1
 
         [realms]
-          {realm} = {{
+          {realm.upper()} = {{
             kdc = {kdc_host}
             admin_server = {kdc_host}
           }}
 
         [domain_realm]
-          .{realm.lower()} = {realm}
-          {realm.lower()} = {realm}
+          .{realm.lower()} = {realm.upper()}
+          {realm.lower()} = {realm.upper()}
         """).strip() + "\n"
         
         krb5_path = tempfile.mktemp(prefix="krb5_", suffix=".conf")
@@ -153,9 +154,10 @@ class OdbcConnectionManager:
         port = config.get('port', database_type.get_default_port())
         
         # Set default authentication type based on database type
-        auth_type = config.get('authentication_type', database_type.get_default_auth_type())
+        auth_type_str = config.get('authentication_type', database_type.get_default_auth_type().value)
+        auth_type = AuthenticationType.from_string(auth_type_str)
         
-        timeout = config.get('connection_timeout', 30)
+        timeout = config.get('connection_timeout', 60)
         
         # Kerberos-specific parameters
         realm = config.get('realm')
@@ -165,7 +167,7 @@ class OdbcConnectionManager:
         connection_temp_files = []
 
         try:
-            if auth_type == "ActiveDirectoryKerberos":
+            if auth_type == AuthenticationType.ACTIVE_DIRECTORY_KERBEROS:
                 if not realm or not kdc_host:
                     raise ValueError("realm and kdc_host are required for ActiveDirectoryKerberos authentication")
                 
@@ -216,13 +218,13 @@ class OdbcConnectionManager:
                         ]
                         
                         # Add authentication based on type
-                        if auth_type in ("ActiveDirectory", "ActiveDirectoryPassword"):
+                        if auth_type in (AuthenticationType.ACTIVE_DIRECTORY, AuthenticationType.ACTIVE_DIRECTORY_PASSWORD):
                             conn_str_parts.extend([
                                 f"UID={username}",
                                 f"PWD={password}",
                                 "Authentication=ActiveDirectoryPassword"
                             ])
-                        elif auth_type == "ActiveDirectoryIntegrated" or auth_type == "ActiveDirectoryKerberos":
+                        elif auth_type in (AuthenticationType.ACTIVE_DIRECTORY_INTEGRATED, AuthenticationType.ACTIVE_DIRECTORY_KERBEROS):
                             # For Kerberos, we use Trusted_Connection which relies on the Kerberos ticket
                             conn_str_parts.append("Trusted_Connection=Yes")
                         else:  # SqlServerAuthentication

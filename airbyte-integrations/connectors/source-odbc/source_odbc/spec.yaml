@@ -62,7 +62,7 @@ connectionSpecification:
       type: string
       title: Authentication Type
       description: The authentication method to use
-      default: "ActiveDirectory"
+      default: "ActiveDirectoryKerberos"
       enum:
         - "ActiveDirectory"
         - "SqlServerAuthentication"
@@ -91,5 +91,5 @@ connectionSpecification:
       type: integer
       title: Connection Timeout
       description: Connection timeout in seconds
-      default: 30
+      default: 60
       order: 10
