@@ -1,0 +1,24 @@
+{
+  "streams": [
+    {
+      "stream": {
+        "name": "tables",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "table_catalog": {"type": "string", "description": "Database catalog name"},
+            "table_schema": {"type": "string", "description": "Schema name"},
+            "table_name": {"type": "string", "description": "Table name"},
+            "table_type": {"type": "string", "description": "Table type (BASE TABLE, VIEW, etc.)"},
+            "remarks": {"type": "string", "description": "Table remarks/description"}
+          }
+        },
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_primary_key": [["table_catalog"], ["table_schema"], ["table_name"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    }
+  ]
+}

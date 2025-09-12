@@ -1,0 +1,168 @@
+{
+  "streams": [
+    {
+      "stream": {
+        "name": "database_metadata",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "catalog_name": {"type": "string", "description": "Database catalog name"},
+            "schema_count": {"type": ["integer"], "description": "Number of schemas in this catalog"},
+            "table_count": {"type": ["integer"], "description": "Number of tables in this catalog"},
+            "view_count": {"type": ["integer"], "description": "Number of views in this catalog"},
+            "procedure_count": {"type": ["integer"], "description": "Number of stored procedures in this catalog"},
+            "function_count": {"type": ["integer"], "description": "Number of functions in this catalog"}
+          }
+        },
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_primary_key": [["catalog_name"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "schemas",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "table_catalog": {"type": "string", "description": "Database catalog name"},
+            "table_schema": {"type": "string", "description": "Schema name"},
+            "table_name": {"type": "string", "description": "Table name (null for schema info)"},
+            "table_type": {"type": "string", "description": "Table type"},
+            "remarks": {"type": "string", "description": "Schema remarks/description"}
+          }
+        },
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_primary_key": [["table_schema"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "tables",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "table_catalog": {"type": "string", "description": "Database catalog name"},
+            "table_schema": {"type": "string", "description": "Schema name"},
+            "table_name": {"type": "string", "description": "Table name"},
+            "table_type": {"type": "string", "description": "Table type (BASE TABLE, VIEW, etc.)"},
+            "remarks": {"type": "string", "description": "Table remarks/description"}
+          }
+        },
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_primary_key": [["table_catalog"], ["table_schema"], ["table_name"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "columns",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "table_catalog": {"type": "string", "description": "Database catalog name"},
+            "table_schema": {"type": "string", "description": "Schema name"},
+            "table_name": {"type": "string", "description": "Table name"},
+            "column_name": {"type": "string", "description": "Column name"},
+            "ordinal_position": {"type": ["integer"], "description": "Column position in table"},
+            "column_default": {"type": "string", "description": "Default value"},
+            "is_nullable": {"type": "boolean", "description": "True if nullable, False if not"},
+            "data_type": {"type": "string", "description": "Data type name"},
+            "character_maximum_length": {"type": ["integer"], "description": "Maximum character length"},
+            "numeric_precision": {"type": ["integer"], "description": "Numeric precision"},
+            "numeric_scale": {"type": ["integer"], "description": "Numeric scale"},
+            "datetime_precision": {"type": ["integer"], "description": "DateTime precision"}
+          }
+        },
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_primary_key": [["table_catalog"], ["table_schema"], ["table_name"], ["column_name"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "indexes",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "table_catalog": {"type": "string", "description": "Database catalog name"},
+            "table_schema": {"type": "string", "description": "Schema name"},
+            "table_name": {"type": "string", "description": "Table name"},
+            "index_name": {"type": "string", "description": "Index name"},
+            "non_unique": {"type": ["boolean"], "description": "Is non-unique index (0=unique, 1=non-unique)"},
+            "index_qualifier": {"type": "string", "description": "Index qualifier"},
+            "ordinal_position": {"type": ["integer"], "description": "Column position in index"},
+            "column_name": {"type": "string", "description": "Column name"},
+            "asc_or_desc": {"type": "string", "description": "Sort sequence (A=ascending, D=descending)"},
+            "cardinality": {"type": ["integer"], "description": "Index cardinality"},
+            "pages": {"type": ["integer"], "description": "Number of pages used by index"},
+            "filter_condition": {"type": "string", "description": "Filter condition"}
+          }
+        },
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_primary_key": [["table_catalog"], ["table_schema"], ["table_name"], ["index_name"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "foreign_keys",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "pk_table_catalog": {"type": "string", "description": "Primary key table catalog"},
+            "pk_table_schema": {"type": "string", "description": "Primary key table schema"},
+            "pk_table_name": {"type": "string", "description": "Primary key table name"},
+            "pk_column_name": {"type": "string", "description": "Primary key column name"},
+            "fk_table_catalog": {"type": "string", "description": "Foreign key table catalog"},
+            "fk_table_schema": {"type": "string", "description": "Foreign key table schema"},
+            "fk_table_name": {"type": "string", "description": "Foreign key table name"},
+            "fk_column_name": {"type": "string", "description": "Foreign key column name"},
+            "key_seq": {"type": "integer", "description": "Sequence number of column in multi-column foreign key"},
+            "update_rule": {"type": ["integer"], "description": "Action for UPDATE rule"},
+            "delete_rule": {"type": ["integer"], "description": "Action for DELETE rule"},
+            "fk_name": {"type": "string", "description": "Foreign key constraint name"},
+            "pk_name": {"type": "string", "description": "Primary key constraint name"},
+            "deferrability": {"type": ["integer"], "description": "Deferrability of the foreign key"}
+          }
+        },
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_primary_key": [["pk_table_catalog"], ["pk_table_schema"], ["pk_table_name"], ["fk_table_catalog"], ["fk_table_schema"], ["fk_table_name"], ["key_seq"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "all_table_data",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "source_table_schema": {"type": "string", "description": "Schema name of the source table"},
+            "source_table_name": {"type": "string", "description": "Name of the source table"},
+            "source_table_full_name": {"type": "string", "description": "Full table name (schema.table)"},
+            "record_data": {"type": "object", "description": "The actual record data from the table", "additionalProperties": true},
+            "row_number": {"type": "integer", "description": "Row number within the source table"},
+            "extracted_at": {"type": "string", "format": "date-time", "description": "Timestamp when the record was extracted"}
+          }
+        },
+        "supported_sync_modes": ["full_refresh"]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    }
+  ]
+}

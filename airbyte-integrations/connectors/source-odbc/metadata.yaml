@@ -1,0 +1,39 @@
+metadataSpecVersion: "1.0"
+data:
+  allowedHosts:
+    hosts:
+      - "*"
+  connectorBuildOptions:
+    baseImage: docker.io/airbyte/python-connector-base:2.0.0@sha256:c44839ba84406116e8ba68722a0f30e8f6e7056c726f447681bb9e9ece8bd916
+  connectorSubtype: database
+  connectorType: source
+  definitionId: b8e2c2c0-d951-4a3a-b4b7-3e9e2c2c2c2c
+  dockerImageTag: 0.1.0
+  dockerRepository: airbyte/source-odbc
+  githubIssueLabel: source-odbc
+  icon: odbc.svg
+  license: ELv2
+  name: ODBC
+  releaseDate: 2025-01-01
+  documentationUrl: https://docs.airbyte.com/integrations/sources/odbc
+  releaseStage: alpha
+  supportLevel: community
+  tags:
+    - language:python
+    - cdk:python
+  connectorTestSuitesOptions:
+    - suite: unitTests
+    - suite: integrationTests
+      testSecrets:
+        - name: SECRET_SOURCE-ODBC__CREDS
+          fileName: config.json
+          secretStore:
+            type: GSM
+            alias: airbyte-connector-testing-secret-store
+    - suite: acceptanceTests
+      testSecrets:
+        - name: SECRET_SOURCE-ODBC__CREDS
+          fileName: config.json
+          secretStore:
+            type: GSM
+            alias: airbyte-connector-testing-secret-store

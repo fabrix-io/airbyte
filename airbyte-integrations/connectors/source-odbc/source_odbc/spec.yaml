@@ -1,0 +1,93 @@
+documentationUrl: https://docs.airbyte.com/integrations/sources/odbc
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: ODBC Connection Specification
+  type: object
+  required:
+    - server
+    - database
+    - database_type
+    - username
+    - password
+    - authentication_type
+  properties:
+    server:
+      type: string
+      title: Server
+      description: The server hostname or IP address
+      examples:
+        - "sqlserver.domain.com"
+        - "192.168.1.100"
+      order: 1
+    database:
+      type: string
+      title: Database
+      description: The database name to connect to
+      examples:
+        - "MyDatabase"
+        - "AdventureWorks"
+      order: 2
+    database_type:
+      type: string
+      title: Database Type
+      description: The type of database system
+      default: "SqlServer"
+      enum:
+        - "SqlServer"
+      order: 3
+    username:
+      type: string
+      title: Username
+      description: The username for authentication
+      examples:
+        - "domain\\user"
+        - "user@domain.com"
+      order: 4
+    password:
+      type: string
+      title: Password
+      description: The password for authentication
+      airbyte_secret: true
+      order: 5
+    port:
+      type: integer
+      title: Port
+      description: "The port number (default: varies by database type)"
+      default: 1433
+      examples:
+        - 1433
+        - 1521
+      order: 6
+    authentication_type:
+      type: string
+      title: Authentication Type
+      description: The authentication method to use
+      default: "ActiveDirectoryIntegrated"
+      enum:
+        - "SqlPassword"
+        - "ActiveDirectoryIntegrated"
+        - "ActiveDirectoryPassword"
+      order: 7
+    # Kerberos-specific configuration
+    realm:
+      type: string
+      title: Kerberos Realm
+      description: The Kerberos realm (domain) for Active Directory authentication
+      examples:
+        - "COMPANY.LOCAL"
+        - "COMPANY.COM"
+      order: 8
+    kdc_host:
+      type: string
+      title: KDC Host
+      description: The Kerberos Key Distribution Center (domain controller) hostname or IP
+      examples:
+        - "dc01.company.com"
+        - "192.168.1.10"
+      order: 9
+    connection_timeout:
+      type: integer
+      title: Connection Timeout
+      description: Connection timeout in seconds
+      default: 60
+      order: 10
